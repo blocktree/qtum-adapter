@@ -36,7 +36,7 @@ func init() {
 
 	tw = NewWalletManager()
 
-	tw.config.serverAPI = "http://120.78.220.105:13889"
+	tw.config.serverAPI = ""
 	tw.config.rpcUser = "test"
 	tw.config.rpcPassword = "test1234"
 	//tw.config.serverAPI = "http://192.168.2.194:10031"
@@ -47,7 +47,7 @@ func init() {
 
 	tw.config.isTestNet = false
 
-	explorerURL := "http://47.52.97.183:20007/qtum-insight-api/"
+	explorerURL := ""
 	tw.ExplorerClient = NewExplorer(explorerURL, true)
 
 	tw.config.RPCServerType = RPCServerExplorer

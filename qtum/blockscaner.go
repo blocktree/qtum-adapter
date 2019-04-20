@@ -1057,8 +1057,15 @@ func (bs *BTCBlockScanner) GetScannedBlockHeight() uint64 {
 	return localHeight
 }
 
-func (bs *BTCBlockScanner) ExtractTransactionData(txid string, scanAddressFunc openwallet.BlockScanAddressFunc) (map[string][]*openwallet.TxExtractData, error) {
+func (bs *BTCBlockScanner) ExtractTransactionData(txid string, scanTargetFunc openwallet.BlockScanTargetFunc) (map[string][]*openwallet.TxExtractData, error) {
 
+	scanAddressFunc := func(address string) (string, bool){
+		target := openwallet.ScanTarget{
+			Address: address,
+			BalanceModelType: openwallet.BalanceModelTypeAddress,
+		}
+		return scanTargetFunc(target)
+	}
 	result := bs.ExtractTransaction(0, "", txid, scanAddressFunc)
 	if !result.Success {
 		return nil, fmt.Errorf("extract transaction failed")
