@@ -28,6 +28,7 @@ import (
 )
 
 type ContractDecoder struct {
+	*openwallet.SmartContractDecoderBase
 	wm *WalletManager
 }
 
