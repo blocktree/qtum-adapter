@@ -63,10 +63,10 @@ func testCreateSummaryTransactionStep(
 	tm *openw.WalletManager,
 	walletID, accountID, summaryAddress, minTransfer, retainedBalance, feeRate string,
 	start, limit int,
-	contract *openwallet.SmartContract) ([]*openwallet.RawTransaction, error) {
+	contract *openwallet.SmartContract) ([]*openwallet.RawTransactionWithError, error) {
 
-	rawTxArray, err := tm.CreateSummaryTransaction(testApp, walletID, accountID, summaryAddress, minTransfer,
-		retainedBalance, feeRate, start, limit, contract)
+	rawTxArray, err := tm.CreateSummaryRawTransactionWithError(testApp, walletID, accountID, summaryAddress, minTransfer,
+		retainedBalance, feeRate, start, limit, contract, nil)
 
 	if err != nil {
 		log.Error("CreateSummaryTransaction failed, unexpected error:", err)
@@ -117,7 +117,7 @@ func testSubmitTransactionStep(tm *openw.WalletManager, rawTx *openwallet.RawTra
 	return rawTx, nil
 }
 
-func TestTransfer_ETH(t *testing.T) {
+func TestTransfer_QTUM(t *testing.T) {
 	tm := testInitWalletManager()
 	walletID := "WHQF3H2Hqa2Pksp8vWmBDZpS7piEGVivRp"
 	accountID := "HgRBsaiKgoVDagwezos496vqKQCh41pY44JbhW65YA8t"
@@ -149,7 +149,7 @@ func TestTransfer_ETH(t *testing.T) {
 
 }
 
-func TestTransfer_ERC20(t *testing.T) {
+func TestTransfer_QRC20(t *testing.T) {
 	tm := testInitWalletManager()
 	walletID := "WMTUzB3LWaSKNKEQw9Sn73FjkEoYGHEp4B"
 	accountID := "59t47qyjHUMZ6PGAdjkJopE9ffAPUkdUhSinJqcWRYZ1"
@@ -189,11 +189,11 @@ func TestTransfer_ERC20(t *testing.T) {
 
 }
 
-func TestSummary_ETH(t *testing.T) {
+func TestSummary_QTUM(t *testing.T) {
 	tm := testInitWalletManager()
-	walletID := "WHQF3H2Hqa2Pksp8vWmBDZpS7piEGVivRp"
-	accountID := "HgRBsaiKgoVDagwezos496vqKQCh41pY44JbhW65YA8t"
-	summaryAddress := "0xd35f9Ea14D063af9B3567064FAB567275b09f03D"
+	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
+	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
+	summaryAddress := "QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a"
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 
@@ -206,18 +206,24 @@ func TestSummary_ETH(t *testing.T) {
 	}
 
 	//执行汇总交易
-	for _, rawTx := range rawTxArray {
-		_, err = testSignTransactionStep(tm, rawTx)
+	for _, rawTxWithErr := range rawTxArray {
+
+		if rawTxWithErr.Error != nil {
+			log.Error(rawTxWithErr.Error.Error())
+			continue
+		}
+
+		_, err = testSignTransactionStep(tm, rawTxWithErr.RawTx)
 		if err != nil {
 			return
 		}
 
-		_, err = testVerifyTransactionStep(tm, rawTx)
+		_, err = testVerifyTransactionStep(tm, rawTxWithErr.RawTx)
 		if err != nil {
 			return
 		}
 
-		_, err = testSubmitTransactionStep(tm, rawTx)
+		_, err = testSubmitTransactionStep(tm, rawTxWithErr.RawTx)
 		if err != nil {
 			return
 		}
@@ -225,11 +231,11 @@ func TestSummary_ETH(t *testing.T) {
 
 }
 
-func TestSummary_ERC20(t *testing.T) {
+func TestSummary_QRC20(t *testing.T) {
 	tm := testInitWalletManager()
-	walletID := "WMTUzB3LWaSKNKEQw9Sn73FjkEoYGHEp4B"
-	accountID := "59t47qyjHUMZ6PGAdjkJopE9ffAPUkdUhSinJqcWRYZ1"
-	summaryAddress := "0xd35f9Ea14D063af9B3567064FAB567275b09f03D"
+	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
+	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
+	summaryAddress := "QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a"
 
 	contract := openwallet.SmartContract{
 		Address:  "4092678e4E78230F46A1534C0fbc8fA39780892B",
@@ -252,18 +258,24 @@ func TestSummary_ERC20(t *testing.T) {
 	}
 
 	//执行汇总交易
-	for _, rawTx := range rawTxArray {
-		_, err = testSignTransactionStep(tm, rawTx)
+	for _, rawTxWithErr := range rawTxArray {
+
+		if rawTxWithErr.Error != nil {
+			log.Error(rawTxWithErr.Error.Error())
+			continue
+		}
+
+		_, err = testSignTransactionStep(tm, rawTxWithErr.RawTx)
 		if err != nil {
 			return
 		}
 
-		_, err = testVerifyTransactionStep(tm, rawTx)
+		_, err = testVerifyTransactionStep(tm, rawTxWithErr.RawTx)
 		if err != nil {
 			return
 		}
 
-		_, err = testSubmitTransactionStep(tm, rawTx)
+		_, err = testSubmitTransactionStep(tm, rawTxWithErr.RawTx)
 		if err != nil {
 			return
 		}
