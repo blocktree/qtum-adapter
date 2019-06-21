@@ -655,6 +655,11 @@ func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
 		wm.ExplorerClient = NewExplorer(wm.config.serverAPI, false)
 	}
 
+	wm.config.DataDir = c.String("dataDir")
+
+	//数据文件夹
+	wm.config.makeDataDir()
+
 	return nil
 }
 

@@ -16,15 +16,12 @@
 package qtum
 
 import (
-	"github.com/blocktree/openwallet/keystore"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
+	"fmt"
 	"github.com/codeskyblue/go-sh"
 	"github.com/shopspring/decimal"
 	"math"
 	"path/filepath"
 	"testing"
-	"fmt"
 )
 
 var (
@@ -47,80 +44,10 @@ func init() {
 
 	tw.config.isTestNet = false
 
-	explorerURL := ""
+	explorerURL := "http://47.52.97.183:20007/qtum-insight-api/"
 	tw.ExplorerClient = NewExplorer(explorerURL, true)
 
 	tw.config.RPCServerType = RPCServerExplorer
-}
-
-func TestImportPrivKey(t *testing.T) {
-
-	tests := []struct {
-		seed []byte
-		name string
-		tag  string
-	}{
-		{
-			seed: tw.generateSeed(),
-			name: "Chance",
-			tag:  "first",
-		},
-		{
-			seed: tw.generateSeed(),
-			name: "Chance",
-			tag:  "second",
-		},
-	}
-
-	for i, test := range tests {
-		key, err := keystore.NewHDKey(test.seed, test.name, "m/44'/88'")
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-			continue
-		}
-
-		privateKey, err := key.MasterKey.ECPrivKey()
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-			continue
-		}
-
-		publicKey, err := key.MasterKey.ECPubKey()
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-			continue
-		}
-
-		wif, err := btcutil.NewWIF(privateKey, &chaincfg.MainNetParams, true)
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-			continue
-		}
-
-		t.Logf("Privatekey wif[%d] = %s\n", i, wif.String())
-
-		address, err := btcutil.NewAddressPubKey(publicKey.SerializeCompressed(), &chaincfg.MainNetParams)
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-			continue
-		}
-
-		t.Logf("Privatekey address[%d] = %s\n", i, address.EncodeAddress())
-
-		//解锁钱包
-		err = tw.UnlockWallet("1234qwer", 120)
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-		}
-
-		//导入私钥
-		err = tw.ImportPrivKey(wif.String(), test.name)
-		if err != nil {
-			t.Errorf("ImportPrivKey[%d] failed unexpected error: %v\n", i, err)
-		} else {
-			t.Logf("ImportPrivKey[%d] success \n", i)
-		}
-	}
 }
 
 func TestGetCoreWalletinfo(t *testing.T) {
