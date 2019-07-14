@@ -109,6 +109,8 @@ type WalletConfig struct {
 	RPCServerType int
 	//数据目录
 	DataDir string
+	//代币转账最低成本
+	TokenTransferCost string
 }
 
 func NewConfig() *WalletConfig {

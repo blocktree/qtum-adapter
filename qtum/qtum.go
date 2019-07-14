@@ -637,6 +637,7 @@ func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
 	wm.config.rpcPassword = c.String("rpcPassword")
 	//wm.config.nodeInstallPath = c.String("nodeInstallPath")
 	wm.config.isTestNet, _ = c.Bool("isTestNet")
+	wm.config.TokenTransferCost = c.String("tokenTransferCost")
 	//if wm.config.isTestNet {
 	//	wm.config.walletDataPath = c.String("testNetDataPath")
 	//} else {

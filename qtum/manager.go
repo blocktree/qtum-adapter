@@ -1698,7 +1698,7 @@ func (wm *WalletManager) EstimateFee(inputs, outputs int64, feeRate decimal.Deci
 	//计算公式如下：148 * 输入数额 + 34 * 输出数额 + 10
 	trx_bytes := decimal.New(inputs*148+outputs*34+piece*10, 0)
 	trx_fee := trx_bytes.Div(decimal.New(1000, 0)).Mul(feeRate)
-
+	trx_fee = trx_fee.Round(wm.Decimal())
 	return trx_fee, nil
 }
 

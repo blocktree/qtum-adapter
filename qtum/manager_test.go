@@ -17,6 +17,7 @@ package qtum
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/config"
 	"github.com/codeskyblue/go-sh"
 	"github.com/shopspring/decimal"
 	"math"
@@ -24,30 +25,29 @@ import (
 	"testing"
 )
 
+
 var (
 	tw *WalletManager
 )
 
-
 func init() {
 
-	tw = NewWalletManager()
+	tw = testNewWalletManager()
+}
 
-	tw.config.serverAPI = ""
-	tw.config.rpcUser = "test"
-	tw.config.rpcPassword = "test1234"
-	//tw.config.serverAPI = "http://192.168.2.194:10031"
-	//tw.config.rpcUser = "wallet"
-	//tw.config.rpcPassword = "walletPassword2017"
-	token := basicAuth(tw.config.rpcUser, tw.config.rpcPassword)
-	tw.walletClient = NewClient(tw.config.serverAPI, token, false)
+func testNewWalletManager() *WalletManager {
+	wm := NewWalletManager()
 
-	tw.config.isTestNet = false
-
-	explorerURL := "http://47.52.97.183:20007/qtum-insight-api/"
-	tw.ExplorerClient = NewExplorer(explorerURL, true)
-
-	tw.config.RPCServerType = RPCServerExplorer
+	//读取配置
+	absFile := filepath.Join("conf", "conf.ini")
+	//log.Debug("absFile:", absFile)
+	c, err := config.NewConfig("ini", absFile)
+	if err != nil {
+		panic(err)
+	}
+	wm.LoadAssetsConfig(c)
+	wm.ExplorerClient.Debug = true
+	return wm
 }
 
 func TestGetCoreWalletinfo(t *testing.T) {

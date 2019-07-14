@@ -18,11 +18,10 @@ package qtum
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/blocktree/go-owcdrivers/addressEncoder"
 	"github.com/blocktree/openwallet/common"
 	"github.com/blocktree/openwallet/openwallet"
-	"github.com/blocktree/go-owcdrivers/addressEncoder"
 	"github.com/shopspring/decimal"
-	"math/big"
 	"strconv"
 	"strings"
 )
@@ -44,28 +43,25 @@ func (decoder *ContractDecoder) GetTokenBalanceByAddress(contract openwallet.Sma
 	var tokenBalanceList []*openwallet.TokenBalance
 
  	for i:=0; i<len(address); i++ {
-		unspent, _ := decoder.wm.GetQRC20Balance(contract, address[i], decoder.wm.config.isTestNet)
+		balance, _ := decoder.wm.GetQRC20Balance(contract, address[i], decoder.wm.config.isTestNet)
 		//if err != nil {
 		//	log.Errorf("get address[%v] QRC20 token balance failed, err=%v", address[i], err)
 		//}
+		balance = balance.Shift(decoder.wm.Decimal()).Shift(-int32(contract.Decimals))
+		balanceConfirmed := balance
 
-		balanceConfirmed := unspent
-		//		log.Debugf("got balanceAll of [%v] :%v", address, balanceAll)
-		balanceUnconfirmed := big.NewInt(0)
-		//balanceUnconfirmed.Sub(balanceAll, balanceConfirmed)
-
-		balance := &openwallet.TokenBalance{
+		tokenBalance := &openwallet.TokenBalance{
 			Contract: &contract,
 			Balance: &openwallet.Balance{
 				Address:          address[i],
 				Symbol:           contract.Symbol,
-				Balance:          unspent.String(),
+				Balance:          balance.String(),
 				ConfirmBalance:   balanceConfirmed.String(),
-				UnconfirmBalance: balanceUnconfirmed.String(),
+				UnconfirmBalance: "0",
 			},
 		}
 
-		tokenBalanceList = append(tokenBalanceList, balance)
+		tokenBalanceList = append(tokenBalanceList, tokenBalance)
 	}
 
 	return tokenBalanceList, nil

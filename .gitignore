@@ -3,3 +3,5 @@ release
 .vscode
 .idea
 *.key
+openwtester/conf
+qtum/conf

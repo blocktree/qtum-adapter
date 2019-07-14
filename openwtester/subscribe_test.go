@@ -52,16 +52,15 @@ func (sub *subscriberSingle) BlockExtractDataNotify(sourceKey string, data *open
 	return nil
 }
 
-
 func TestSubscribeAddress(t *testing.T) {
 
 	var (
 		endRunning = make(chan bool, 1)
 		symbol     = "QTUM"
-		accountID  = "W4VUMN3wxQcwVEwsRvoyuhrJ95zhyc4zRW"
-		addrs      = map[string]string{
-			"Qf6t5Ww14ZWVbG3kpXKoTt4gXeKNVxM9QJ": accountID, //合约收币
-			//"QWSTGRwdScLfdr6agUqR4G7ow4Mjc4e5re",	//合约发币
+		//accountID  = "W4VUMN3wxQcwVEwsRvoyuhrJ95zhyc4zRW"
+		addrs = map[string]string{
+			"Qf6t5Ww14ZWVbG3kpXKoTt4gXeKNVxM9QJ": "sender",   //合约收币
+			"QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a": "receiver", //合约发币
 			//"QbTQBADMqSuHM6wJk2e8w1KckqK5RRYrQ6",	//主链转账
 			//"QREUcesH46vMeF6frLy92aR1QC22tADNda", 	//主链转账
 		}
@@ -93,7 +92,7 @@ func TestSubscribeAddress(t *testing.T) {
 
 	//log.Debug("already got scanner:", assetsMgr)
 	scanner := assetsMgr.GetBlockScanner()
-	scanner.SetRescanBlockHeight(330000)
+	scanner.SetRescanBlockHeight(348190)
 
 	if scanner == nil {
 		log.Error(symbol, "is not support block scan")

@@ -63,10 +63,11 @@ func testCreateSummaryTransactionStep(
 	tm *openw.WalletManager,
 	walletID, accountID, summaryAddress, minTransfer, retainedBalance, feeRate string,
 	start, limit int,
-	contract *openwallet.SmartContract) ([]*openwallet.RawTransactionWithError, error) {
+	contract *openwallet.SmartContract,
+	feeSupportAccount *openwallet.FeesSupportAccount) ([]*openwallet.RawTransactionWithError, error) {
 
 	rawTxArray, err := tm.CreateSummaryRawTransactionWithError(testApp, walletID, accountID, summaryAddress, minTransfer,
-		retainedBalance, feeRate, start, limit, contract, nil)
+		retainedBalance, feeRate, start, limit, contract, feeSupportAccount)
 
 	if err != nil {
 		log.Error("CreateSummaryTransaction failed, unexpected error:", err)
@@ -118,88 +119,110 @@ func testSubmitTransactionStep(tm *openw.WalletManager, rawTx *openwallet.RawTra
 }
 
 func TestTransfer_QTUM(t *testing.T) {
+
+	addrs := []string{
+		//"QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk",
+		//"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
+		//"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
+		//"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
+		"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
+	}
+
 	tm := testInitWalletManager()
-	walletID := "WHQF3H2Hqa2Pksp8vWmBDZpS7piEGVivRp"
-	accountID := "HgRBsaiKgoVDagwezos496vqKQCh41pY44JbhW65YA8t"
-	to := "0xd35f9Ea14D063af9B3567064FAB567275b09f03D"
+	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
+	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
+	//to := "QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk"
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 
-	rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.001", "", nil)
-	if err != nil {
-		return
+	for _, to := range addrs {
+
+
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.01", "", nil)
+		if err != nil {
+			return
+		}
+
+		log.Std.Info("rawTx: %+v", rawTx)
+
+		_, err = testSignTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
+
+		_, err = testVerifyTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
+
+		//_, err = testSubmitTransactionStep(tm, rawTx)
+		//if err != nil {
+		//	return
+		//}
+
 	}
-
-	log.Std.Info("rawTx: %+v", rawTx)
-
-	_, err = testSignTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
-
-	_, err = testVerifyTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
-
-	_, err = testSubmitTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
-
 }
 
 func TestTransfer_QRC20(t *testing.T) {
+
+	addrs := []string{
+		"QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk",
+		"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
+		"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
+		"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
+		"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
+	}
+
 	tm := testInitWalletManager()
-	walletID := "WMTUzB3LWaSKNKEQw9Sn73FjkEoYGHEp4B"
-	accountID := "59t47qyjHUMZ6PGAdjkJopE9ffAPUkdUhSinJqcWRYZ1"
-	to := "0xd35f9Ea14D063af9B3567064FAB567275b09f03D"
+	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
+	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
 
 	contract := openwallet.SmartContract{
-		Address:  "4092678e4E78230F46A1534C0fbc8fA39780892B",
-		Symbol:   "ETH",
-		Name:     "OCoin",
-		Token:    "OCN",
-		Decimals: 18,
+		Address:  "f2033ede578e17fa6231047265010445bca8cf1c",
+		Symbol:   "QTUM",
+		Name:     "QCASH",
+		Token:    "QC",
+		Decimals: 8,
 	}
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 
 	testGetAssetsAccountTokenBalance(tm, walletID, accountID, contract)
 
-	rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "2.3", "", &contract)
-	if err != nil {
-		return
-	}
+	for _, to := range addrs {
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "1.02345", "", &contract)
+		if err != nil {
+			return
+		}
 
-	_, err = testSignTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
+		_, err = testSignTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 
-	_, err = testVerifyTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
+		_, err = testVerifyTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 
-	_, err = testSubmitTransactionStep(tm, rawTx)
-	if err != nil {
-		return
+		_, err = testSubmitTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 	}
-
 }
 
 func TestSummary_QTUM(t *testing.T) {
 	tm := testInitWalletManager()
 	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
-	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
+	accountID := "4gc8Ff4tiKFtPj6JzbAZqofyUHpbVHk3CpR21hTovS8T"
 	summaryAddress := "QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a"
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 
 	rawTxArray, err := testCreateSummaryTransactionStep(tm, walletID, accountID,
 		summaryAddress, "", "", "",
-		0, 100, nil)
+		0, 100, nil, nil)
 	if err != nil {
 		log.Errorf("CreateSummaryTransaction failed, unexpected error: %v", err)
 		return
@@ -234,15 +257,21 @@ func TestSummary_QTUM(t *testing.T) {
 func TestSummary_QRC20(t *testing.T) {
 	tm := testInitWalletManager()
 	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
-	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
+	accountID := "4gc8Ff4tiKFtPj6JzbAZqofyUHpbVHk3CpR21hTovS8T"
 	summaryAddress := "QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a"
 
 	contract := openwallet.SmartContract{
-		Address:  "4092678e4E78230F46A1534C0fbc8fA39780892B",
-		Symbol:   "ETH",
-		Name:     "OCoin",
-		Token:    "OCN",
-		Decimals: 18,
+		Address:  "f2033ede578e17fa6231047265010445bca8cf1c",
+		Symbol:   "QTUM",
+		Name:     "QCASH",
+		Token:    "QC",
+		Decimals: 8,
+	}
+
+	feesSupport := openwallet.FeesSupportAccount{
+		AccountID: "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q",
+		//FixSupportAmount: "0.01",
+		FeesSupportScale: "1.3",
 	}
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
@@ -251,7 +280,7 @@ func TestSummary_QRC20(t *testing.T) {
 
 	rawTxArray, err := testCreateSummaryTransactionStep(tm, walletID, accountID,
 		summaryAddress, "", "", "",
-		0, 100, &contract)
+		0, 100, &contract, &feesSupport)
 	if err != nil {
 		log.Errorf("CreateSummaryTransaction failed, unexpected error: %v", err)
 		return
