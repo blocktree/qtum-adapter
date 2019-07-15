@@ -122,7 +122,7 @@ func TestWalletManager_GetAssetsAccountTokenBalance(t *testing.T) {
 	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
 
 	contract := openwallet.SmartContract{
-		Address:  "f2033ede578e17fa6231047265010445bca8cf1c",
+		Address:  "0xf2033ede578e17fa6231047265010445bca8cf1c",
 		Symbol:   "QTUM",
 		Name:     "QCASH",
 		Token:    "QC",

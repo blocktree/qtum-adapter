@@ -82,7 +82,7 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransaction(wrapper openwalle
 func (decoder *TransactionDecoder) CreateSimpleRawTransaction(wrapper openwallet.WalletDAI, rawTx *openwallet.RawTransaction) error {
 
 	var (
-		accountID        = rawTx.Account.AccountID
+		accountID = rawTx.Account.AccountID
 		//accountTotalSent = decimal.Zero
 	)
 
@@ -92,7 +92,7 @@ func (decoder *TransactionDecoder) CreateSimpleRawTransaction(wrapper openwallet
 	}
 
 	if len(address) == 0 {
-		return openwallet.Errorf(openwallet.ErrAccountNotAddress,"[%s] have not addresses", accountID)
+		return openwallet.Errorf(openwallet.ErrAccountNotAddress, "[%s] have not addresses", accountID)
 	}
 
 	searchAddrs := make([]string, 0)
@@ -107,7 +107,7 @@ func (decoder *TransactionDecoder) CreateSimpleRawTransaction(wrapper openwallet
 	}
 
 	if len(unspents) == 0 {
-		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount,"[%s] balance is not enough", accountID)
+		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount, "[%s] balance is not enough", accountID)
 	}
 
 	//获取utxo，按小到大排序
@@ -150,7 +150,7 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 	}
 
 	if len(address) == 0 {
-		return nil, openwallet.Errorf(openwallet.ErrAccountNotAddress,"[%s] have not addresses", accountID)
+		return nil, openwallet.Errorf(openwallet.ErrAccountNotAddress, "[%s] have not addresses", accountID)
 	}
 
 	searchAddrs := make([]string, 0)
@@ -200,18 +200,12 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 
 		//尽可能筹够最大input数
 		if len(unspents)+len(sumUnspents) < decoder.wm.config.maxTxInputs {
-			sumUnspents = append(sumUnspents, unspents...)
-			//for _, u := range unspents {
 
-			//if u.Spendable {
-			//	sumUnspents = append(sumUnspents, u)
-			//	if retainedBalance.GreaterThan(decimal.Zero) {
-			//		outputAddrs[addr] = retainedBalance.StringFixed(decoder.wm.Decimal())
-			//	}
-			//}
-			//}
-
-			//decoder.wm.Log.Debugf("sumUnspents: %+v", sumUnspents)
+			for _, u := range unspents {
+				if u.Spendable {
+					sumUnspents = append(sumUnspents, u)
+				}
+			}
 		}
 
 		//如果utxo已经超过最大输入，或遍历地址完结，就可以进行构建交易单
@@ -331,7 +325,7 @@ func (decoder *TransactionDecoder) CreateQRC20RawTransaction(wrapper openwallet.
 	}
 
 	if len(address) == 0 {
-		return openwallet.Errorf(openwallet.ErrAccountNotAddress,"[%s] have not addresses", accountID)
+		return openwallet.Errorf(openwallet.ErrAccountNotAddress, "[%s] have not addresses", accountID)
 	}
 
 	if len(rawTx.To) == 0 {
@@ -430,16 +424,16 @@ func (decoder *TransactionDecoder) CreateQRC20RawTransaction(wrapper openwallet.
 
 	//遍历所有地址后，全部Token余额不足， 返回错误Token余额不足
 	if totalTokenBalance.LessThan(toAmount) {
-		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount,"account[%s] token[%s] total balance: %s is not enough! ", accountID, tokenCoin, totalTokenBalance.StringFixed(tokenDecimals))
+		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount, "account[%s] token[%s] total balance: %s is not enough! ", accountID, tokenCoin, totalTokenBalance.StringFixed(tokenDecimals))
 	}
 
 	//单个地址的可用Token余额不足够
 	if useTokenBalance.LessThan(toAmount) {
-		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAddress,"account[%s] token[%s] total balance is enough, but the available balance: %s of address[%s] is not enough! ", accountID, tokenCoin, useTokenBalance.StringFixed(tokenDecimals), useTokenAddress)
+		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAddress, "account[%s] token[%s] total balance is enough, but the available balance: %s of address[%s] is not enough! ", accountID, tokenCoin, useTokenBalance.StringFixed(tokenDecimals), useTokenAddress)
 	} else {
 		//可用Token余额足够，但没有utxo，返回错误及有Token余额的地址没有可用主链币
 		if len(missUtxoAddress) > 0 {
-			return openwallet.Errorf(openwallet.ErrInsufficientFees,"account[%s] token[%s] total balance is enough, but the utxo of address[%s] is empty! ", accountID, tokenCoin, missUtxoAddress)
+			return openwallet.Errorf(openwallet.ErrInsufficientFees, "account[%s] token[%s] total balance is enough, but the utxo of address[%s] is empty! ", accountID, tokenCoin, missUtxoAddress)
 		}
 	}
 
@@ -498,7 +492,7 @@ func (decoder *TransactionDecoder) CreateQRC20RawTransaction(wrapper openwallet.
 		}
 
 		if balance.LessThan(actualFees) {
-			return openwallet.Errorf(openwallet.ErrInsufficientFees,"The [%s] available utxo balance: %s is not enough! ", decoder.wm.Symbol(), balance.StringFixed(decoder.wm.Decimal()))
+			return openwallet.Errorf(openwallet.ErrInsufficientFees, "The [%s] available utxo balance: %s is not enough! ", decoder.wm.Symbol(), balance.StringFixed(decoder.wm.Decimal()))
 		}
 
 		//计算手续费，输出地址有2个，一个是发送，一个是找零，一个是OP_CALL
@@ -1059,19 +1053,19 @@ func (decoder *TransactionDecoder) createSimpleRawTransactionWithUTXO(
 	unspents []*Unspent) error {
 
 	var (
-		usedUTXO         []*Unspent
-		outputAddrs      = make(map[string]decimal.Decimal)
-		balance          = decimal.New(0, 0)
-		totalSend        = decimal.New(0, 0)
-		actualFees       = decimal.New(0, 0)
-		feesRate         = decimal.New(0, 0)
-		accountID        = rawTx.Account.AccountID
-		destinations     = make([]string, 0)
-		err error
+		usedUTXO     []*Unspent
+		outputAddrs  = make(map[string]decimal.Decimal)
+		balance      = decimal.New(0, 0)
+		totalSend    = decimal.New(0, 0)
+		actualFees   = decimal.New(0, 0)
+		feesRate     = decimal.New(0, 0)
+		accountID    = rawTx.Account.AccountID
+		destinations = make([]string, 0)
+		err          error
 	)
 
 	if len(unspents) == 0 {
-		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount,"[%s] balance is not enough", accountID)
+		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount, "[%s] balance is not enough", accountID)
 	}
 
 	if len(rawTx.To) == 0 {
@@ -1477,7 +1471,6 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransactionWithError(wrapper 
 	}
 }
 
-
 // getAssetsAccountUnspentSatisfyAmount
 func (decoder *TransactionDecoder) getAssetsAccountUnspents(wrapper openwallet.WalletDAI, account *openwallet.AssetsAccount) ([]*Unspent, *openwallet.Error) {
 
@@ -1509,7 +1502,7 @@ func (decoder *TransactionDecoder) getUTXOSatisfyAmount(unspents []*Unspent, amo
 
 	var (
 		usedUTXO = make([]*Unspent, 0)
-		balance = decimal.New(0, 0)
+		balance  = decimal.New(0, 0)
 	)
 
 	if unspents != nil {

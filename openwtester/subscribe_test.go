@@ -59,8 +59,8 @@ func TestSubscribeAddress(t *testing.T) {
 		symbol     = "QTUM"
 		//accountID  = "W4VUMN3wxQcwVEwsRvoyuhrJ95zhyc4zRW"
 		addrs = map[string]string{
-			"Qf6t5Ww14ZWVbG3kpXKoTt4gXeKNVxM9QJ": "sender",   //合约收币
-			"QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a": "receiver", //合约发币
+			"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs": "sender",   //合约收币
+			//"QYV6cA236fyVKpM9fCFHBp8GCATW6sUF5a": "receiver", //合约发币
 			//"QbTQBADMqSuHM6wJk2e8w1KckqK5RRYrQ6",	//主链转账
 			//"QREUcesH46vMeF6frLy92aR1QC22tADNda", 	//主链转账
 		}
@@ -92,7 +92,7 @@ func TestSubscribeAddress(t *testing.T) {
 
 	//log.Debug("already got scanner:", assetsMgr)
 	scanner := assetsMgr.GetBlockScanner()
-	scanner.SetRescanBlockHeight(348190)
+	scanner.SetRescanBlockHeight(409397)
 
 	if scanner == nil {
 		log.Error(symbol, "is not support block scan")
