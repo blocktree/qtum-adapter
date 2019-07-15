@@ -47,7 +47,7 @@ func (decoder *ContractDecoder) GetTokenBalanceByAddress(contract openwallet.Sma
 		//if err != nil {
 		//	log.Errorf("get address[%v] QRC20 token balance failed, err=%v", address[i], err)
 		//}
-		balance = balance.Shift(decoder.wm.Decimal()).Shift(-int32(contract.Decimals))
+		//balance = balance.Shift(decoder.wm.Decimal()).Shift(-int32(contract.Decimals))
 		balanceConfirmed := balance
 
 		tokenBalance := &openwallet.TokenBalance{
