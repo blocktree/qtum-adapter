@@ -151,7 +151,7 @@ func TestWalletManager_GetEstimateFeeRate(t *testing.T) {
 }
 
 func TestGetAddressBalance(t *testing.T) {
-	symbol := "VSYS"
+	symbol := "QTUM"
 	assetsMgr, err := openw.GetAssetsAdapter(symbol)
 	if err != nil {
 		log.Error(symbol, "is not support")
@@ -168,12 +168,7 @@ func TestGetAddressBalance(t *testing.T) {
 	bs := assetsMgr.GetBlockScanner()
 
 	addrs := []string{
-		"AR5D3fGVWDz32wWCnVbwstsMW8fKtWdzNFT",
-		"AR9qbgbsmLh3ADSU9ngR22J2HpD5D9ncTCg",
-		"ARAA8AnUYa4kWwWkiZTTyztG5C6S9MFTx11",
-		"ARCUYWyLvGDTrhZ6K9jjMh9B5iRVEf3vRzs",
-		"ARGehumz77nGcfkQrPjK4WUyNevvU9NCNqQ",
-		"ARJdaB9Fo6Sk2nxBrQP2p4woWotPxjaebCv",
+		"QiwkQ7X5v9Y89pYAJG9vTLBANVLVr4G44P",
 	}
 
 	balances, err := bs.GetBalanceByAddress(addrs...)
@@ -185,5 +180,49 @@ func TestGetAddressBalance(t *testing.T) {
 		log.Infof("balance[%s] = %s", b.Address, b.Balance)
 		log.Infof("UnconfirmBalance[%s] = %s", b.Address, b.UnconfirmBalance)
 		log.Infof("ConfirmBalance[%s] = %s", b.Address, b.ConfirmBalance)
+	}
+}
+
+func TestGetAddressTokenBalance(t *testing.T) {
+	symbol := "QTUM"
+	assetsMgr, err := openw.GetAssetsAdapter(symbol)
+	if err != nil {
+		log.Error(symbol, "is not support")
+		return
+	}
+	//读取配置
+	absFile := filepath.Join(configFilePath, symbol+".ini")
+
+	c, err := config.NewConfig("ini", absFile)
+	if err != nil {
+		return
+	}
+	assetsMgr.LoadAssetsConfig(c)
+	sc := assetsMgr.GetSmartContractDecoder()
+
+	addrs := []string{
+		"QiwkQ7X5v9Y89pYAJG9vTLBANVLVr4G44P",
+	}
+
+	contract := openwallet.SmartContract{
+		Address:  "0xf2033ede578e17fa6231047265010445bca8cf1c",
+		Symbol:   "QTUM",
+		Name:     "QCASH",
+		Token:    "QC",
+		Decimals: 8,
+	}
+
+	contractID := openwallet.GenContractID("QTUM", "0xf2033ede578e17fa6231047265010445bca8cf1c")
+	log.Infof("contractID = %s", contractID)
+
+	balances, err := sc.GetTokenBalanceByAddress(contract, addrs...)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	for _, b := range balances {
+		log.Infof("balance[%s] = %s", b.Balance.Address, b.Balance)
+		log.Infof("UnconfirmBalance[%s] = %s", b.Balance.Address, b.Balance.UnconfirmBalance)
+		log.Infof("ConfirmBalance[%s] = %s", b.Balance.Address, b.Balance.ConfirmBalance)
 	}
 }

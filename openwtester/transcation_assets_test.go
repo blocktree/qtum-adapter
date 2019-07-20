@@ -167,10 +167,10 @@ func TestTransfer_QRC20(t *testing.T) {
 
 	addrs := []string{
 		"QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk",
-		"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
-		"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
-		"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
-		"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
+		//"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
+		//"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
+		//"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
+		//"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
 	}
 
 	tm := testInitWalletManager()
@@ -178,7 +178,7 @@ func TestTransfer_QRC20(t *testing.T) {
 	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
 
 	contract := openwallet.SmartContract{
-		Address:  "f2033ede578e17fa6231047265010445bca8cf1c",
+		Address:  "0xf2033ede578e17fa6231047265010445bca8cf1c",
 		Symbol:   "QTUM",
 		Name:     "QCASH",
 		Token:    "QC",
