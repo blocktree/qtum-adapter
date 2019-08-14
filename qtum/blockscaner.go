@@ -75,7 +75,7 @@ func NewBTCBlockScanner(wm *WalletManager) *BTCBlockScanner {
 	bs.extractingCH = make(chan struct{}, maxExtractingSize)
 	bs.wm = wm
 	bs.IsScanMemPool = true
-	bs.RescanLastBlockCount = 0
+	bs.RescanLastBlockCount = 3
 	bs.stopSocketIO = make(chan struct{})
 
 	//设置扫描任务
@@ -242,7 +242,7 @@ func (bs *BTCBlockScanner) ScanBlockTask() {
 
 	//重扫前N个块，为保证记录找到
 	for i := currentHeight - bs.RescanLastBlockCount; i < currentHeight; i++ {
-		bs.ScanBlock(i)
+		bs.scanBlock(i)
 	}
 
 	if bs.IsScanMemPool {
