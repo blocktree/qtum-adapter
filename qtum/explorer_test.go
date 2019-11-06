@@ -27,8 +27,6 @@ import (
 	"testing"
 )
 
-//http://192.168.32.107:20003/insight-api/
-
 func TestGetBlockHeightByExplorer(t *testing.T) {
 	height, err := tw.getBlockHeightByExplorer()
 	if err != nil {
@@ -48,12 +46,12 @@ func TestGetBlockHashByExplorer(t *testing.T) {
 }
 
 func TestGetBlockByExplorer(t *testing.T) {
-	block, err := tw.getBlockByExplorer("42f358f456a7544bbc9d6cf694c4183e2049456da7f06ad9f475fe12757aefe9")
+	block, err := tw.getBlockByExplorer("88866c76a460528f02f7d3215fd895b1b5c565f85b03c0b90eddfb8ec4b5ff26")
 	if err != nil {
 		t.Errorf("GetBlock failed unexpected error: %v\n", err)
 		return
 	}
-	t.Logf("GetBlock = %v \n", block)
+	t.Logf("GetBlock = %+v \n", block)
 }
 
 func TestListUnspentByExplorer(t *testing.T) {
@@ -71,12 +69,12 @@ func TestListUnspentByExplorer(t *testing.T) {
 func TestGetTransactionByExplorer(t *testing.T) {
 	//5aa478590ea82d3b6a308bdf5af0753caeab0aefefeb4f88a088c15fe305f59b
 	//eb8e496f7dd23554d6d45de30beab384c8e0d023c9c7f1fbc15d90d10bb873f8
-	raw, err := tw.getTransactionByExplorer("16c0c4e4b5218899f9bf1b44bf7e89848f5e031a1ea60e6b6fabd42c7a4175f1")
+	raw, err := tw.getTransactionByExplorer("88ebba7f429210ea302d88f7bf7863e205ac73b0ff7ae087104e9ccfc1109c6f")
 	if err != nil {
 		t.Errorf("getTransactionByExplorer failed unexpected error: %v\n", err)
 		return
 	}
-	t.Logf("getTransactionByExplorer = %v \n", raw)
+	t.Logf("getTransactionByExplorer = %+v \n", raw)
 }
 
 func TestGetBalanceByExplorer(t *testing.T) {
@@ -186,7 +184,7 @@ func TestGetAddressTokenBalanceByExplorer(t *testing.T) {
 		Symbol: tw.Symbol(),
 		Decimals: 8,
 	}
-	raw, err := tw.getAddressTokenBalanceByExplorer(token, "QbNmvcEPaBssXRmmiaQQQfFcE61po21yQK")
+	raw, err := tw.getAddressTokenBalanceByExplorer(token, "Qb15HZYiDtqozMTXa2MF64dGhKEUbmpHYc")
 	if err != nil {
 		t.Errorf("getAddressTokenBalanceByExplorer failed unexpected error: %v\n", err)
 		return

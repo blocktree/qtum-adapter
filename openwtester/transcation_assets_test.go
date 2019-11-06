@@ -16,11 +16,10 @@
 package openwtester
 
 import (
-	"github.com/blocktree/openwallet/openw"
-	"testing"
-
 	"github.com/blocktree/openwallet/log"
+	"github.com/blocktree/openwallet/openw"
 	"github.com/blocktree/openwallet/openwallet"
+	"testing"
 )
 
 func testGetAssetsAccountBalance(tm *openw.WalletManager, walletID, accountID string) {
@@ -121,11 +120,12 @@ func testSubmitTransactionStep(tm *openw.WalletManager, rawTx *openwallet.RawTra
 func TestTransfer_QTUM(t *testing.T) {
 
 	addrs := []string{
-		//"QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk",
-		//"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
-		//"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
-		//"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
+		"QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk",
+		"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
+		"QXVM5xKiT9ukWzuzVzqwv2vgrZVhTRdANE",
 		"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
+		"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
+		"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
 	}
 
 	tm := testInitWalletManager()
@@ -155,11 +155,11 @@ func TestTransfer_QTUM(t *testing.T) {
 			return
 		}
 
-		//_, err = testSubmitTransactionStep(tm, rawTx)
-		//if err != nil {
-		//	return
-		//}
-
+		_, err = testSubmitTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
+		
 	}
 }
 
@@ -190,7 +190,7 @@ func TestTransfer_QRC20(t *testing.T) {
 	testGetAssetsAccountTokenBalance(tm, walletID, accountID, contract)
 
 	for _, to := range addrs {
-		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "1.02345", "", &contract)
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.1", "", &contract)
 		if err != nil {
 			return
 		}

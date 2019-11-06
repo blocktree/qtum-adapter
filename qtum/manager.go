@@ -1699,6 +1699,9 @@ func (wm *WalletManager) EstimateFee(inputs, outputs int64, feeRate decimal.Deci
 	trx_bytes := decimal.New(inputs*148+outputs*34+piece*10, 0)
 	trx_fee := trx_bytes.Div(decimal.New(1000, 0)).Mul(feeRate)
 	trx_fee = trx_fee.Round(wm.Decimal())
+	if trx_fee.LessThan(wm.config.MinFees) {
+		trx_fee = wm.config.MinFees
+	}
 	return trx_fee, nil
 }
 

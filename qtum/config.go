@@ -111,6 +111,8 @@ type WalletConfig struct {
 	DataDir string
 	//代币转账最低成本
 	TokenTransferCost string
+	//最低手续费
+	MinFees decimal.Decimal
 }
 
 func NewConfig() *WalletConfig {

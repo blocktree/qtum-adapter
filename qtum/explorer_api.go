@@ -23,7 +23,6 @@ import (
 	"github.com/imroc/req"
 	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
-	"math/big"
 	"net/http"
 	"strings"
 )
@@ -118,27 +117,27 @@ func (wm *WalletManager) getBlockByExplorer(hash string) (*Block, error) {
 //getBlockHashByExplorer 获取区块hash
 func (wm *WalletManager) getBlockHashByExplorer(height uint64) (string, error) {
 
-	path := fmt.Sprintf("block-index/%d", height)
+	path := fmt.Sprintf("block/%d", height)
 
 	result, err := wm.ExplorerClient.Call(path, nil, "GET")
 	if err != nil {
 		return "", err
 	}
 
-	return result.Get("blockHash").String(), nil
+	return result.Get("hash").String(), nil
 }
 
 //getBlockHeightByExplorer 获取区块链高度
 func (wm *WalletManager) getBlockHeightByExplorer() (uint64, error) {
 
-	path := "status"
+	path := "info"
 
 	result, err := wm.ExplorerClient.Call(path, nil, "GET")
 	if err != nil {
 		return 0, err
 	}
 
-	height := result.Get("info.blocks").Uint()
+	height := result.Get("height").Uint()
 
 	return height, nil
 }
@@ -159,7 +158,7 @@ func (wm *WalletManager) getTransactionByExplorer(txid string) (*Transaction, er
 		return nil, err
 	}
 
-	tx := newTxByExplorer(result, wm.config.isTestNet)
+	tx := wm.newTxByExplorer(result, wm.config.isTestNet)
 
 	return tx, nil
 
@@ -172,37 +171,37 @@ func (wm *WalletManager) listUnspentByExplorer(address ...string) ([]*Unspent, e
 		utxos = make([]*Unspent, 0)
 	)
 
-	addrs := strings.Join(address, ",")
 
-	request := req.Param{
-		"addrs": addrs,
-	}
+	for _, addr := range address {
 
-	path := "addrs/utxo"
+		path := fmt.Sprintf("address/%s/utxo", addr)
 
-	result, err := wm.ExplorerClient.Call(path, request, "POST")
-	if err != nil {
-		return nil, err
-	}
+		result, err := wm.ExplorerClient.Call(path, nil, "GET")
+		if err != nil {
+			return nil, err
+		}
 
-	array := result.Array()
-	for _, a := range array {
-		utxos = append(utxos, newUnspentByExplorer(&a))
+		array := result.Array()
+		for _, a := range array {
+			utxos = append(utxos, wm.newUnspentByExplorer(&a))
+		}
+
 	}
 
 	return utxos, nil
 
 }
 
-func newUnspentByExplorer(json *gjson.Result) *Unspent {
+func (wm *WalletManager)newUnspentByExplorer(json *gjson.Result) *Unspent {
 	obj := &Unspent{}
 	//解析json
-	obj.TxID = gjson.Get(json.Raw, "txid").String()
-	obj.Vout = gjson.Get(json.Raw, "vout").Uint()
+	obj.TxID = gjson.Get(json.Raw, "transactionId").String()
+	obj.Vout = gjson.Get(json.Raw, "outputIndex").Uint()
 	obj.Address = gjson.Get(json.Raw, "address").String()
-	obj.AccountID = gjson.Get(json.Raw, "account").String()
+	//obj.AccountID = gjson.Get(json.Raw, "account").String()
 	obj.ScriptPubKey = gjson.Get(json.Raw, "scriptPubKey").String()
-	obj.Amount = gjson.Get(json.Raw, "amount").String()
+	amount, _ := decimal.NewFromString(gjson.Get(json.Raw, "value").String())
+	obj.Amount = amount.Shift(-wm.Decimal()).String()
 	obj.Confirmations = gjson.Get(json.Raw, "confirmations").Uint()
 	isStake := gjson.Get(json.Raw, "isStake").Bool()
 	if isStake {
@@ -215,7 +214,7 @@ func newUnspentByExplorer(json *gjson.Result) *Unspent {
 	} else {
 		obj.Spendable = true
 	}
-	obj.Solvable = gjson.Get(json.Raw, "solvable").Bool()
+	//obj.Solvable = gjson.Get(json.Raw, "solvable").Bool()
 
 	return obj
 }
@@ -247,153 +246,103 @@ func newBlockByExplorer(json *gjson.Result) *Block {
 	//解析json
 	obj.Hash = gjson.Get(json.Raw, "hash").String()
 	obj.Confirmations = gjson.Get(json.Raw, "confirmations").Uint()
-	obj.Merkleroot = gjson.Get(json.Raw, "merkleroot").String()
+	obj.Merkleroot = gjson.Get(json.Raw, "merkleRoot").String()
 
 	txs := make([]string, 0)
-	for _, tx := range gjson.Get(json.Raw, "tx").Array() {
+	for _, tx := range gjson.Get(json.Raw, "transactions").Array() {
 		txs = append(txs, tx.String())
 	}
 
 	obj.tx = txs
-	obj.Previousblockhash = gjson.Get(json.Raw, "previousblockhash").String()
+	obj.Previousblockhash = gjson.Get(json.Raw, "prevHash").String()
 	obj.Height = gjson.Get(json.Raw, "height").Uint()
 	//obj.Version = gjson.Get(json.Raw, "version").String()
-	obj.Time = gjson.Get(json.Raw, "time").Uint()
+	obj.Time = gjson.Get(json.Raw, "timestamp").Uint()
 
 	return obj
 }
 
-func newTxByExplorer(json *gjson.Result, isTestnet bool) *Transaction {
+func (wm *WalletManager) newTxByExplorer(json *gjson.Result, isTestnet bool) *Transaction {
 
-	/*
-			{
-			"txid": "9f5eae5b95016825a437ceb9c9224d3e30d3b351f1100e4df5cc0cacac4e668c",
-			"version": 1,
-			"locktime": 1433760,
-			"vin": [],
-			"vout": [],
-			"blockhash": "0000000000003ac968ee1ae321f35f76d4dcb685045968d60fc39edb20b0eed0",
-			"blockheight": 1433761,
-			"confirmations": 5,
-			"time": 1539050096,
-			"blocktime": 1539050096,
-			"valueOut": 0.14652549,
-			"size": 814,
-			"valueIn": 0.14668889,
-			"fees": 0.0001634
-		}
-	*/
 	obj := Transaction{}
 	//解析json
-	obj.TxID = gjson.Get(json.Raw, "txid").String()
+	obj.TxID = gjson.Get(json.Raw, "id").String()
 	obj.Version = gjson.Get(json.Raw, "version").Uint()
-	obj.LockTime = gjson.Get(json.Raw, "locktime").Int()
-	obj.BlockHash = gjson.Get(json.Raw, "blockhash").String()
-	blockHeight := gjson.Get(json.Raw, "blockheight").Int()
-	if blockHeight <= 0 {
+	obj.LockTime = gjson.Get(json.Raw, "lockTime").Int()
+	obj.BlockHash = gjson.Get(json.Raw, "blockHash").String()
+	obj.BlockHeight = gjson.Get(json.Raw, "blockHeight").Uint()
+	if obj.BlockHeight <= 0 {
 		obj.BlockHeight = 0
 	}
 	//obj.BlockHeight = gjson.Get(json.Raw, "blockheight").Uint()
 	obj.Confirmations = gjson.Get(json.Raw, "confirmations").Uint()
-	obj.Blocktime = gjson.Get(json.Raw, "blocktime").Int()
+	obj.Blocktime = gjson.Get(json.Raw, "timestamp").Int()
 	obj.Size = gjson.Get(json.Raw, "size").Uint()
-	obj.Fees = gjson.Get(json.Raw, "fees").String()
+	fees, _ := decimal.NewFromString(gjson.Get(json.Raw, "fees").String())
+	obj.Fees = fees.Shift(-wm.Decimal()).String()
+	obj.IsCoinBase = gjson.Get(json.Raw, "isCoinbase").Bool()
+	obj.IsCoinstake = gjson.Get(json.Raw, "isCoinstake").Bool()
 
 	obj.Vins = make([]*Vin, 0)
-	if vins := gjson.Get(json.Raw, "vin"); vins.IsArray() {
-		for _, vin := range vins.Array() {
-			input := newTxVinByExplorer(&vin)
+	if vins := gjson.Get(json.Raw, "inputs"); vins.IsArray() {
+		for i, vin := range vins.Array() {
+			input := wm.newTxVinByExplorer(&vin)
+			input.N = uint64(i)
 			obj.Vins = append(obj.Vins, input)
 		}
 	}
 
 	obj.Vouts = make([]*Vout, 0)
-	if vouts := gjson.Get(json.Raw, "vout"); vouts.IsArray() {
-		for _, vout := range vouts.Array() {
-			output := newTxVoutByExplorer(&vout, isTestnet)
+	if vouts := gjson.Get(json.Raw, "outputs"); vouts.IsArray() {
+		for i, vout := range vouts.Array() {
+			output := wm.newTxVoutByExplorer(&vout)
+			output.N = uint64(i)
 			obj.Vouts = append(obj.Vouts, output)
 		}
 	}
 
-	obj.Isqrc20Transfer = gjson.Get(json.Raw, "isqrc20Transfer").Bool()
-
-	if obj.Isqrc20Transfer {
-		obj.TokenReceipts = make([]*TokenReceipt, 0)
-		if receipts := gjson.Get(json.Raw, "receipt"); receipts.IsArray() {
-			for _, receipt := range receipts.Array() {
-				token := newTokenReceiptByExplorer(&receipt, isTestnet)
-				obj.TokenReceipts = append(obj.TokenReceipts, token)
-			}
+	obj.TokenReceipts = make([]*TokenReceipt, 0)
+	if receipts := gjson.Get(json.Raw, "qrc20TokenTransfers"); receipts.IsArray() {
+		obj.Isqrc20Transfer = true
+		for _, receipt := range receipts.Array() {
+			token := newTokenReceiptByExplorer(&receipt, isTestnet)
+			token.TxHash = obj.TxID
+			token.BlockHash = obj.BlockHash
+			token.BlockHeight = obj.BlockHeight
+			obj.TokenReceipts = append(obj.TokenReceipts, token)
 		}
 	}
 
 	return &obj
 }
 
-func newTxVinByExplorer(json *gjson.Result) *Vin {
+func (wm *WalletManager) newTxVinByExplorer(json *gjson.Result) *Vin {
 
-	/*
-		{
-			"txid": "b8c00fff9208cb02f694666084fe0d65c471e92e45cdc3fb2e43af3a772e702d",
-			"vout": 0,
-			"sequence": 4294967294,
-			"n": 0,
-			"scriptSig": {
-				"hex": "47304402201f77d18435931a6cb51b6dd183decf067f933e92647562f71a33e80988fbc8f6022012abe6824ffa70e5ccb7326e0dbb66144ba71133c1d4a1215da0b17358d7ca660121024d7be1242bd44619779a976cd1cd2d9351fcf58df59929b30a0c69d852302fb5",
-				"asm": "304402201f77d18435931a6cb51b6dd183decf067f933e92647562f71a33e80988fbc8f6022012abe6824ffa70e5ccb7326e0dbb66144ba71133c1d4a1215da0b17358d7ca66[ALL] 024d7be1242bd44619779a976cd1cd2d9351fcf58df59929b30a0c69d852302fb5"
-			},
-			"addr": "msYiUQquCtGucnk3ZaWeJenYmY8WxRoeuv",
-			"valueSat": 990000,
-			"value": 0.0099,
-			"doubleSpentTxID": null
-		}
-	*/
 	obj := Vin{}
 	//解析json
-	obj.TxID = gjson.Get(json.Raw, "txid").String()
-	obj.Vout = gjson.Get(json.Raw, "vout").Uint()
-	obj.N = gjson.Get(json.Raw, "n").Uint()
-	obj.Addr = gjson.Get(json.Raw, "addr").String()
-	obj.Value = gjson.Get(json.Raw, "value").String()
-	obj.Coinbase = gjson.Get(json.Raw, "coinbase").String()
+	obj.TxID = gjson.Get(json.Raw, "prevTxId").String()
+	obj.Vout = gjson.Get(json.Raw, "outputIndex").Uint()
+	//obj.N = gjson.Get(json.Raw, "n").Uint()
+	obj.Addr = gjson.Get(json.Raw, "address").String()
+	value, _ := decimal.NewFromString(gjson.Get(json.Raw, "value").String())
+	obj.Value = value.Shift(-wm.Decimal()).String()
+	//obj.Coinbase = gjson.Get(json.Raw, "coinbase").String()
 
 	return &obj
 }
 
-func newTxVoutByExplorer(json *gjson.Result, isTestnet bool) *Vout {
+func (wm *WalletManager) newTxVoutByExplorer(json *gjson.Result) *Vout {
 
-	/*
-		{
-			"value": "0.01652549",
-			"n": 0,
-			"scriptPubKey": {
-				"hex": "76a9142760a760e8d22b5facb380444920e1197f272ea888ac",
-				"asm": "OP_DUP OP_HASH160 2760a760e8d22b5facb380444920e1197f272ea8 OP_EQUALVERIFY OP_CHECKSIG",
-				"addresses": ["mj7ASAGw8ia2o7Hqvo2XS1d7jGWr5UgEU9"],
-				"type": "pubkeyhash"
-			},
-			"spentTxId": null,
-			"spentIndex": null,
-			"spentHeight": null
-		}
-	*/
 	obj := Vout{}
 	//解析json
-	obj.Value = gjson.Get(json.Raw, "value").String()
+	value, _ := decimal.NewFromString(gjson.Get(json.Raw, "value").String())
+	obj.Value = value.Shift(-wm.Decimal()).String()
 	obj.N = gjson.Get(json.Raw, "n").Uint()
 	obj.ScriptPubKey = gjson.Get(json.Raw, "scriptPubKey.hex").String()
 
 	//提取地址
-	if addresses := gjson.Get(json.Raw, "scriptPubKey.addresses"); addresses.IsArray() {
-		obj.Addr = addresses.Array()[0].String()
-	}
-
+	obj.Addr = gjson.Get(json.Raw, "address").String()
 	obj.Type = gjson.Get(json.Raw, "scriptPubKey.type").String()
-
-	//if len(obj.Addr) == 0 {
-	//	scriptBytes, _ := hex.DecodeString(obj.ScriptPubKey)
-	//	obj.Addr, _ = ScriptPubKeyToBech32Address(scriptBytes, isTestnet)
-	//}
 
 	return &obj
 }
@@ -401,78 +350,58 @@ func newTxVoutByExplorer(json *gjson.Result, isTestnet bool) *Vout {
 //newTokenReceiptByExplorer
 func newTokenReceiptByExplorer(json *gjson.Result, isTestnet bool) *TokenReceipt {
 
-	/*
-			"receipt": [
-		        {
-		            "blockHash": "35d196cbd08cf7dcce08d99bb7267150c7ce328f08e0f66f706267cd75ab0d55",
-		            "blockNumber": 249878,
-		            "transactionHash": "eb8e496f7dd23554d6d45de30beab384c8e0d023c9c7f1fbc15d90d10bb873f8",
-		            "transactionIndex": 17,
-		            "from": "a20a4eec5c83fb9b61a9efc7fe6c0e06bb3dde43",
-		            "to": "f2033ede578e17fa6231047265010445bca8cf1c",
-		            "cumulativeGasUsed": 87782,
-		            "gasUsed": 36423,
-		            "contractAddress": "f2033ede578e17fa6231047265010445bca8cf1c",
-		            "excepted": "None",
-		            "log": [
-		                {
-		                    "address": "f2033ede578e17fa6231047265010445bca8cf1c",
-		                    "topics": [
-		                        "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-		                        "000000000000000000000000a20a4eec5c83fb9b61a9efc7fe6c0e06bb3dde43",
-		                        "000000000000000000000000e57e4a5f9ac130defb33a057729f10728fcdb9cb"
-		                    ],
-		                    "data": "0000000000000000000000000000000000000000000000000000034f80e83000"
-		                }
-		            ]
-		        }
-		    ],
-		    "isqrc20Transfer": true,
-	*/
-
 	obj := TokenReceipt{}
 	//解析json
-	obj.BlockHash = gjson.Get(json.Raw, "blockHash").String()
-	obj.BlockHeight = gjson.Get(json.Raw, "blockNumber").Uint()
-	obj.TxHash = gjson.Get(json.Raw, "transactionHash").String()
-	obj.Excepted = gjson.Get(json.Raw, "excepted").String()
-	obj.GasUsed = gjson.Get(json.Raw, "gasUsed").Uint()
-	obj.ContractAddress = "0x" + gjson.Get(json.Raw, "contractAddress").String()
-	obj.Sender = HashAddressToBaseAddress(
-		gjson.Get(json.Raw, "from").String(),
-		isTestnet)
 
-	logs := gjson.Get(json.Raw, "log").Array()
-	for _, logInfo := range logs {
-		topics := logInfo.Get("topics").Array()
-		data := logInfo.Get("data").String()
+	obj.From = gjson.Get(json.Raw, "from").String()
+	obj.To = gjson.Get(json.Raw, "to").String()
+	obj.Amount = gjson.Get(json.Raw, "value").String()
+	obj.ContractAddress = "0x" + gjson.Get(json.Raw, "addressHex").String()
 
-		if len(topics) != 3 {
-			continue
-		}
 
-		if "0x"+topics[0].String() != QTUM_TRANSFER_EVENT_ID {
-			continue
-		}
-
-		if len(data) != 64 {
-			continue
-		}
-
-		//log.Info("topics[1]:", topics[1].String())
-		//log.Info("topics[2]:", topics[2].String())
-		obj.From = strings.TrimPrefix(topics[1].String(), "000000000000000000000000")
-		obj.To = strings.TrimPrefix(topics[2].String(), "000000000000000000000000")
-		obj.From = HashAddressToBaseAddress(obj.From, isTestnet)
-		obj.To = HashAddressToBaseAddress(obj.To, isTestnet)
-
-		//转化为10进制
-		//log.Debug("TokenReceipt TxHash", obj.TxHash)
-		//log.Debug("TokenReceipt amount", logInfo.Get("data").String())
-		value := new(big.Int)
-		value, _ = value.SetString(data, 16)
-		obj.Amount = decimal.NewFromBigInt(value, 0).String()
-	}
+	//obj.BlockHash = gjson.Get(json.Raw, "blockHash").String()
+	//obj.BlockHeight = gjson.Get(json.Raw, "blockNumber").Uint()
+	//obj.TxHash = gjson.Get(json.Raw, "transactionHash").String()
+	//obj.Excepted = gjson.Get(json.Raw, "excepted").String()
+	//obj.GasUsed = gjson.Get(json.Raw, "gasUsed").Uint()
+	//obj.ContractAddress = "0x" + gjson.Get(json.Raw, "contractAddress").String()
+	//obj.Sender = HashAddressToBaseAddress(
+	//	gjson.Get(json.Raw, "from").String(),
+	//	isTestnet)
+	//
+	//
+	//
+	//logs := gjson.Get(json.Raw, "log").Array()
+	//for _, logInfo := range logs {
+	//	topics := logInfo.Get("topics").Array()
+	//	data := logInfo.Get("data").String()
+	//
+	//	if len(topics) != 3 {
+	//		continue
+	//	}
+	//
+	//	if "0x"+topics[0].String() != QTUM_TRANSFER_EVENT_ID {
+	//		continue
+	//	}
+	//
+	//	if len(data) != 64 {
+	//		continue
+	//	}
+	//
+	//	//log.Info("topics[1]:", topics[1].String())
+	//	//log.Info("topics[2]:", topics[2].String())
+	//	obj.From = strings.TrimPrefix(topics[1].String(), "000000000000000000000000")
+	//	obj.To = strings.TrimPrefix(topics[2].String(), "000000000000000000000000")
+	//	obj.From = HashAddressToBaseAddress(obj.From, isTestnet)
+	//	obj.To = HashAddressToBaseAddress(obj.To, isTestnet)
+	//
+	//	//转化为10进制
+	//	//log.Debug("TokenReceipt TxHash", obj.TxHash)
+	//	//log.Debug("TokenReceipt amount", logInfo.Get("data").String())
+	//	value := new(big.Int)
+	//	value, _ = value.SetString(data, 16)
+	//	obj.Amount = decimal.NewFromBigInt(value, 0).String()
+	//}
 
 	return &obj
 }
@@ -480,47 +409,29 @@ func newTokenReceiptByExplorer(json *gjson.Result, isTestnet bool) *TokenReceipt
 //getBalanceByExplorer 获取地址余额
 func (wm *WalletManager) getBalanceByExplorer(address string) (*openwallet.Balance, error) {
 
-	path := fmt.Sprintf("addr/%s?noTxList=1", address)
+	path := fmt.Sprintf("address/%s", address)
 
 	result, err := wm.ExplorerClient.Call(path, nil, "GET")
 	if err != nil {
 		return nil, err
 	}
 
-	return newBalanceByExplorer(result), nil
+	return wm.newBalanceByExplorer(result), nil
 }
 
-func newBalanceByExplorer(json *gjson.Result) *openwallet.Balance {
+func (wm *WalletManager) newBalanceByExplorer(json *gjson.Result) *openwallet.Balance {
 
-	/*
-
-		{
-			"addrStr": "mnMSQs3HZ5zhJrCEKbqGvcDLjAAxvDJDCd",
-			"balance": 3136.82244887,
-			"balanceSat": 313682244887,
-			"totalReceived": 3136.82244887,
-			"totalReceivedSat": 313682244887,
-			"totalSent": 0,
-			"totalSentSat": 0,
-			"unconfirmedBalance": 0,
-			"unconfirmedBalanceSat": 0,
-			"unconfirmedTxApperances": 0,
-			"txApperances": 3909
-		}
-
-	*/
 	obj := openwallet.Balance{}
 	//解析json
-	obj.Address = gjson.Get(json.Raw, "addrStr").String()
-	obj.Balance = gjson.Get(json.Raw, "balance").String()
-	obj.UnconfirmBalance = gjson.Get(json.Raw, "unconfirmedBalance").String()
-	u, _ := decimal.NewFromString(obj.UnconfirmBalance)
-	b, _ := decimal.NewFromString(obj.UnconfirmBalance)
-	obj.ConfirmBalance = b.Sub(u).StringFixed(8)
+	//obj.Address = gjson.Get(json.Raw, "addrStr").String()
+	u, _ := decimal.NewFromString(gjson.Get(json.Raw, "unconfirmed").String())
+	b, _ := decimal.NewFromString(gjson.Get(json.Raw, "balance").String())
+	obj.Balance = b.Shift(-wm.Decimal()).String()
+	obj.UnconfirmBalance = u.Shift(-wm.Decimal()).String()
+	obj.ConfirmBalance = b.Sub(u).String()
 
 	return &obj
 }
-
 
 //getBalanceByExplorer 获取地址余额
 func (wm *WalletManager) getBalanceCalUnspentByExplorer(address ...string) ([]*openwallet.Balance, error) {
@@ -615,7 +526,7 @@ func (wm *WalletManager) getMultiAddrTransactionsByExplorer(offset, limit int, a
 
 	if items := result.Get("items"); items.IsArray() {
 		for _, obj := range items.Array() {
-			tx := newTxByExplorer(&obj, wm.config.isTestNet)
+			tx := wm.newTxByExplorer(&obj, wm.config.isTestNet)
 			trxs = append(trxs, tx)
 		}
 	}
@@ -626,20 +537,14 @@ func (wm *WalletManager) getMultiAddrTransactionsByExplorer(offset, limit int, a
 //estimateFeeRateByExplorer 通过浏览器获取费率
 func (wm *WalletManager) estimateFeeRateByExplorer() (decimal.Decimal, error) {
 
-	defaultRate, _ := decimal.NewFromString("0.004")
-
-	path := fmt.Sprintf("utils/estimatefee?nbBlocks=%d", 2)
+	path := "info"
 
 	result, err := wm.ExplorerClient.Call(path, nil, "GET")
 	if err != nil {
 		return decimal.New(0, 0), err
 	}
 
-	feeRate, _ := decimal.NewFromString(result.Get("2").String())
-
-	if feeRate.LessThan(defaultRate) {
-		feeRate = defaultRate
-	}
+	feeRate, _ := decimal.NewFromString(result.Get("feeRate").String())
 
 	return feeRate, nil
 }
@@ -675,8 +580,14 @@ func (wm *WalletManager) sendRawTransactionByExplorer(txHex string) (string, err
 	if err != nil {
 		return "", err
 	}
+	status := result.Get("status").Int()
+	id := result.Get("id").String()
+	message := result.Get("message").String()
+	if status == 1 {
+		return "", fmt.Errorf(message)
+	}
 
-	return result.Get("txid").String(), nil
+	return id, nil
 
 }
 
@@ -685,21 +596,27 @@ func (wm *WalletManager) getAddressTokenBalanceByExplorer(token openwallet.Smart
 
 	trimContractAddr := strings.TrimPrefix(token.Address, "0x")
 
-	tokenAddressBase := HashAddressToBaseAddress(trimContractAddr, wm.config.isTestNet)
+	//tokenAddressBase := HashAddressToBaseAddress(trimContractAddr, wm.config.isTestNet)
 
-	path := fmt.Sprintf("tokens/%s/addresses/%s/balance?format=object", tokenAddressBase, address)
+	path := fmt.Sprintf("address/%s", address)
 
 	result, err := wm.ExplorerClient.Call(path, nil, "GET")
 	if err != nil {
 		return decimal.New(0, 0), err
 	}
 
-	balanceStr := result.Get("balance").String()
+	if qrc20Balances := result.Get("qrc20Balances");qrc20Balances.IsArray() {
+		for _, qrc20 := range qrc20Balances.Array() {
+			contractAddr := qrc20.Get("addressHex").String()
+			if contractAddr == trimContractAddr {
+				balanceStr := qrc20.Get("balance").String()
+				balance, _ := decimal.NewFromString(balanceStr)
+				balance = balance.Shift(int32(-token.Decimals))
+				return balance, nil
+			}
+		}
+	}
 
-	balance, _ := decimal.NewFromString(balanceStr)
-	decimals := decimal.New(1, int32(token.Decimals))
-
-	balance = balance.Div(decimals)
-	return balance, nil
+	return decimal.New(0, 0), nil
 
 }

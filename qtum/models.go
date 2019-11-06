@@ -330,6 +330,7 @@ type Transaction struct {
 	Confirmations   uint64
 	Blocktime       int64
 	IsCoinBase      bool
+	IsCoinstake     bool
 	Fees            string
 	Isqrc20Transfer bool
 
@@ -356,17 +357,16 @@ type Vout struct {
 }
 
 type TokenReceipt struct {
-
-	TxHash            string
+	TxHash          string
 	BlockHash       string
 	BlockHeight     uint64
-	Sender string
-	From string
-	To string
-	GasUsed uint64
+	Sender          string
+	From            string
+	To              string
+	GasUsed         uint64
 	ContractAddress string
-	Excepted string
-	Amount string
+	Excepted        string
+	Amount          string
 }
 
 func newTxByCore(json *gjson.Result, isTestnet bool) *Transaction {

@@ -74,8 +74,8 @@ func NewBTCBlockScanner(wm *WalletManager) *BTCBlockScanner {
 
 	bs.extractingCH = make(chan struct{}, maxExtractingSize)
 	bs.wm = wm
-	bs.IsScanMemPool = true
-	bs.RescanLastBlockCount = 3
+	bs.IsScanMemPool = false
+	bs.RescanLastBlockCount = 0
 	bs.stopSocketIO = make(chan struct{})
 
 	//设置扫描任务
@@ -566,7 +566,7 @@ func (bs *BTCBlockScanner) ExtractTransaction(blockHeight uint64, blockHash stri
 		trx.BlockHash = blockHash
 	}
 	//提取主币交易单
-	bs.extractTransaction(trx, isCoinstake, &result, scanAddressFunc)
+	bs.extractTransaction(trx, &result, scanAddressFunc)
 	//提取代币交易单
 	bs.extractTokenTransfer(trx, &result, scanAddressFunc)
 	return result
@@ -574,7 +574,7 @@ func (bs *BTCBlockScanner) ExtractTransaction(blockHeight uint64, blockHash stri
 }
 
 //ExtractTransactionData 提取交易单
-func (bs *BTCBlockScanner) extractTransaction(trx *Transaction, isCoinstake bool, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) {
+func (bs *BTCBlockScanner) extractTransaction(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) {
 
 	var (
 		success = true
@@ -591,7 +591,7 @@ func (bs *BTCBlockScanner) extractTransaction(trx *Transaction, isCoinstake bool
 		//检查交易单输入信息是否完整，不完整查上一笔交易单的输出填充数据
 		for _, input := range vin {
 
-			if len(input.Coinbase) > 0 {
+			if trx.IsCoinBase {
 				//coinbase skip
 				success = true
 				break
@@ -635,17 +635,17 @@ func (bs *BTCBlockScanner) extractTransaction(trx *Transaction, isCoinstake bool
 				txAction = "transfer"
 			}
 
-			if isCoinstake {
+			if trx.IsCoinstake {
 				txType = 100
 				txAction = "coinstake"
 			}
 
 			//提取出账部分记录
-			from, totalSpent := bs.extractTxInput(trx, isCoinstake, result, scanAddressFunc)
+			from, totalSpent := bs.extractTxInput(trx, trx.IsCoinstake, result, scanAddressFunc)
 			//bs.wm.Log.Debug("from:", from, "totalSpent:", totalSpent)
 
 			//提取入账部分记录
-			to, totalReceived := bs.extractTxOutput(trx, isCoinstake, result, scanAddressFunc)
+			to, totalReceived := bs.extractTxOutput(trx, trx.IsCoinstake, result, scanAddressFunc)
 			//bs.wm.Log.Debug("to:", to, "totalReceived:", totalReceived)
 
 			for _, extractData := range result.extractData {
@@ -1580,7 +1580,7 @@ func (bs *BTCBlockScanner) GetTransactionsByAddress(offset, limit int, coin open
 			extractContractData: make(map[string]*openwallet.TxExtractData),
 		}
 
-		bs.extractTransaction(tx, false, &result, scanAddressFunc)
+		bs.extractTransaction(tx, &result, scanAddressFunc)
 		data := result.extractData
 		txExtract := data[key]
 		if txExtract != nil {
@@ -1595,11 +1595,11 @@ func (bs *BTCBlockScanner) GetTransactionsByAddress(offset, limit int, coin open
 func (bs *BTCBlockScanner) Run() error {
 
 	//使用浏览器，开启socketIO监听内存池交易
-	if bs.wm.config.RPCServerType == RPCServerExplorer {
-		if bs.socketIO == nil {
-			go bs.setupSocketIO()
-		}
-	}
+	//if bs.wm.config.RPCServerType == RPCServerExplorer {
+	//	if bs.socketIO == nil {
+	//		go bs.setupSocketIO()
+	//	}
+	//}
 
 	bs.BlockScannerBase.Run()
 
@@ -1609,13 +1609,13 @@ func (bs *BTCBlockScanner) Run() error {
 ////Stop 停止扫描
 func (bs *BTCBlockScanner) Stop() error {
 
-	if bs.socketIO != nil {
-		bs.socketIO.Close()
-		bs.socketIO = nil
-	}
+	//if bs.socketIO != nil {
+	//	bs.socketIO.Close()
+	//	bs.socketIO = nil
+	//}
 
 	//通知停止线程
-	bs.stopSocketIO <- struct{}{}
+	//bs.stopSocketIO <- struct{}{}
 
 	bs.BlockScannerBase.Stop()
 	return nil
