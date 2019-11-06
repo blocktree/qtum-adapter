@@ -21,5 +21,9 @@ rpcPassword = "test1234"
 isTestNet = false
 # Cache data file directory, default = "", current directory: ./data
 dataDir = ""
+# minimum transaction fees
+minFees = "0.004"
+# token transfer minimum cost
+tokenTransferCost = "0.1"
 
 ```
