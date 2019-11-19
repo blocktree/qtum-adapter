@@ -7,7 +7,7 @@ require (
 	github.com/astaxie/beego v1.11.1
 	github.com/blocktree/go-owcdrivers v1.0.39
 	github.com/blocktree/go-owcrypt v1.0.2
-	github.com/blocktree/openwallet v1.4.6
+	github.com/blocktree/openwallet v1.5.5
 	github.com/bndr/gotabulate v1.1.2
 	github.com/btcsuite/btcd v0.0.0-20190315201642-aa6e0f35703c
 	github.com/btcsuite/btcutil v0.0.0-20190316010144-3ac1210f4b38

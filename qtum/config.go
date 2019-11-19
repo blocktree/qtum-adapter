@@ -76,7 +76,7 @@ type WalletConfig struct {
 	//rpc证书
 	certFileName string
 	//区块链数据文件
-	blockchainFile string
+	//blockchainFile string
 	//是否测试网络
 	isTestNet bool
 	// 核心钱包是否只做监听
@@ -143,7 +143,7 @@ func NewConfig() *WalletConfig {
 	//rpc证书
 	c.certFileName = "rpc.cert"
 	//区块链数据文件
-	c.blockchainFile = "blockchain.db"
+	//c.blockchainFile = "blockchain.db"
 	//是否测试网络
 	c.isTestNet = true
 	// 核心钱包是否只做监听

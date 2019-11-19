@@ -199,11 +199,20 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 		}
 
 		//尽可能筹够最大input数
-		if len(unspents)+len(sumUnspents) < decoder.wm.config.maxTxInputs {
-
-			for _, u := range unspents {
-				if u.Spendable {
-					sumUnspents = append(sumUnspents, u)
+		unspentLimit := decoder.wm.config.maxTxInputs - len(sumUnspents)
+		if unspentLimit > 0 {
+			if len(unspents) > unspentLimit {
+				for i := 0; i < unspentLimit; i++ {
+					u := unspents[i]
+					if u.Spendable {
+						sumUnspents = append(sumUnspents, u)
+					}
+				}
+			} else {
+				for _, u := range unspents {
+					if u.Spendable {
+						sumUnspents = append(sumUnspents, u)
+					}
 				}
 			}
 		}
