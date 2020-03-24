@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
 	"github.com/shopspring/decimal"
@@ -969,7 +969,6 @@ func (bs *BTCBlockScanner) newExtractDataNotify(height uint64, extractData map[s
 	return nil
 }
 
-
 //DeleteUnscanRecordNotFindTX 删除未没有找到交易记录的重扫记录
 func (bs *BTCBlockScanner) DeleteUnscanRecordNotFindTX() error {
 
@@ -1657,7 +1656,6 @@ func (bs *BTCBlockScanner) setupSocketIO() error {
 
 	return nil
 }
-
 
 //SupportBlockchainDAI 支持外部设置区块链数据访问接口
 //@optional

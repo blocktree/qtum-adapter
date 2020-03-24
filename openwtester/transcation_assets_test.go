@@ -16,9 +16,9 @@
 package openwtester
 
 import (
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openw"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openw"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"testing"
 )
 
@@ -137,7 +137,6 @@ func TestTransfer_QTUM(t *testing.T) {
 
 	for _, to := range addrs {
 
-
 		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.01", "", nil)
 		if err != nil {
 			return
@@ -159,7 +158,7 @@ func TestTransfer_QTUM(t *testing.T) {
 		if err != nil {
 			return
 		}
-		
+
 	}
 }
 

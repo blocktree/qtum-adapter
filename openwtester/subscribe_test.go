@@ -17,10 +17,10 @@ package openwtester
 
 import (
 	"github.com/astaxie/beego/config"
-	"github.com/blocktree/openwallet/common/file"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openw"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/common/file"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openw"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"path/filepath"
 	"testing"
 )
@@ -49,6 +49,12 @@ func (sub *subscriberSingle) BlockExtractDataNotify(sourceKey string, data *open
 	}
 
 	log.Std.Notice("data.Transaction: %+v", data.Transaction)
+
+	return nil
+}
+
+//BlockExtractSmartContractDataNotify 区块提取智能合约交易结果通知
+func (sub *subscriberSingle) BlockExtractSmartContractDataNotify(sourceKey string, data *openwallet.SmartContractReceipt) error {
 
 	return nil
 }

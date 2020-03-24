@@ -19,8 +19,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/blocktree/go-owcdrivers/addressEncoder"
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
@@ -42,7 +42,7 @@ func (decoder *ContractDecoder) GetTokenBalanceByAddress(contract openwallet.Sma
 
 	var tokenBalanceList []*openwallet.TokenBalance
 
- 	for i:=0; i<len(address); i++ {
+	for i := 0; i < len(address); i++ {
 		balance, _ := decoder.wm.GetQRC20Balance(contract, address[i], decoder.wm.config.isTestNet)
 		//if err != nil {
 		//	log.Errorf("get address[%v] QRC20 token balance failed, err=%v", address[i], err)
@@ -72,7 +72,7 @@ func AddressTo32bytesArg(address string, isTestNet bool) ([]byte, error) {
 	var addressToHash160 []byte
 	if isTestNet {
 		addressToHash160, _ = addressEncoder.AddressDecode(address, addressEncoder.QTUM_testnetAddressP2PKH)
-	}else {
+	} else {
 		addressToHash160, _ = addressEncoder.AddressDecode(address, addressEncoder.QTUM_mainnetAddressP2PKH)
 	}
 
@@ -93,13 +93,13 @@ func (wm *WalletManager) GetQRC20Balance(token openwallet.SmartContract, address
 	}
 }
 
-func (wm *WalletManager)GetQRC20UnspentByAddress(contractAddress, address string, tokenDecimal uint64, isTestNet bool) (decimal.Decimal, error) {
+func (wm *WalletManager) GetQRC20UnspentByAddress(contractAddress, address string, tokenDecimal uint64, isTestNet bool) (decimal.Decimal, error) {
 
 	trimContractAddr := strings.TrimPrefix(contractAddress, "0x")
 
 	to32bytesArg, err := AddressTo32bytesArg(address, isTestNet)
 	if err != nil {
-		return decimal.New(0,0), err
+		return decimal.New(0, 0), err
 	}
 
 	combineString := hex.EncodeToString(append([]byte{0x70, 0xa0, 0x82, 0x31}, to32bytesArg[:]...))
@@ -112,14 +112,14 @@ func (wm *WalletManager)GetQRC20UnspentByAddress(contractAddress, address string
 
 	result, err := wm.walletClient.Call("callcontract", request)
 	if err != nil {
-		return decimal.New(0,0), err
+		return decimal.New(0, 0), err
 	}
 
 	//fmt.Printf("Callcontract result: %s\n", result.String())
 
 	QRC20Utox := NewQRC20Unspent(result)
 
-	sotashiUnspent, _ := strconv.ParseInt(QRC20Utox.Output,16,64)
+	sotashiUnspent, _ := strconv.ParseInt(QRC20Utox.Output, 16, 64)
 	sotashiUnspentDecimal, _ := decimal.NewFromString(common.NewString(sotashiUnspent).String())
 	unspent := sotashiUnspentDecimal.Div(decimal.New(1, int32(tokenDecimal)))
 
@@ -134,7 +134,7 @@ func AmountTo32bytesArg(amount int64) (string, error) {
 	addLen := defaultLen - len(hexAmount)
 	var bytesArg string
 
-	for i := 0; i<addLen; i++ {
+	for i := 0; i < addLen; i++ {
 		bytesArg = bytesArg + "0"
 	}
 
@@ -143,7 +143,7 @@ func AmountTo32bytesArg(amount int64) (string, error) {
 	return bytesArg, nil
 }
 
-func (wm *WalletManager)QRC20Transfer(contractAddress string, from string, to string, gasPrice string, amount decimal.Decimal, gasLimit int64, tokenDecimal uint64, isTestNet bool) (string, error){
+func (wm *WalletManager) QRC20Transfer(contractAddress string, from string, to string, gasPrice string, amount decimal.Decimal, gasLimit int64, tokenDecimal uint64, isTestNet bool) (string, error) {
 
 	trimContractAddr := strings.TrimPrefix(contractAddress, "0x")
 
@@ -163,7 +163,7 @@ func (wm *WalletManager)QRC20Transfer(contractAddress string, from string, to st
 	combineString := hex.EncodeToString(append([]byte{0xa9, 0x05, 0x9c, 0xbb}, addressToArg[:]...))
 
 	dataHex := combineString + amountToArg
-	fmt.Printf("dataHex: %s\n",dataHex)
+	fmt.Printf("dataHex: %s\n", dataHex)
 
 	request := []interface{}{
 		trimContractAddr,

@@ -3,5 +3,5 @@ release
 .vscode
 .idea
 *.key
-openwtester/conf
-qtum/conf
+*.ini
+go.sum

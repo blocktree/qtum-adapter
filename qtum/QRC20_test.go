@@ -16,10 +16,10 @@
 package qtum
 
 import (
-	"testing"
 	"encoding/hex"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/shopspring/decimal"
-	"github.com/blocktree/openwallet/openwallet"
+	"testing"
 )
 
 var (
@@ -32,13 +32,12 @@ func Test_addressTo32bytesArg(t *testing.T) {
 	to32bytesArg, err := AddressTo32bytesArg(address, isTestNet)
 	if err != nil {
 		t.Errorf("To32bytesArg failed unexpected error: %v\n", err)
-	}else {
+	} else {
 		t.Logf("To32bytesArg success.")
 	}
 
 	t.Logf("This is to32bytesArg string for you to use: %s\n", hex.EncodeToString(to32bytesArg))
 }
-
 
 func Test_getUnspentByAddress(t *testing.T) {
 
@@ -57,17 +56,17 @@ func Test_getUnspentByAddress(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("strconv.ParseInt failed unexpected error: %v\n", err)
-	}else {
+	} else {
 		t.Logf("QRC20Unspent %s: %s = %v\n", contractAddress, address, unspent)
 	}
 }
 
-func Test_AmountTo32bytesArg(t *testing.T){
-	var amount int64= 100000000
+func Test_AmountTo32bytesArg(t *testing.T) {
+	var amount int64 = 100000000
 	bytesArg, err := AmountTo32bytesArg(amount)
 	if err != nil {
 		t.Errorf("strconv.ParseInt failed unexpected error: %v\n", err)
-	}else {
+	} else {
 		t.Logf("hexAmount = %s\n", bytesArg)
 	}
 }
@@ -96,7 +95,7 @@ func Test_QRC20Transfer(t *testing.T) {
 	result, err := tw.QRC20Transfer(contractAddress, from, to, gasPrice, amount, gasLimit, tokenDecimal, isTestNet)
 	if err != nil {
 		t.Errorf("QRC20Transfer failed unexpected error: %v\n", err)
-	}else {
+	} else {
 		t.Logf("QRC20Transfer = %s\n", result)
 	}
 }
@@ -136,7 +135,7 @@ func Test_GetTokenBalanceByAddress(t *testing.T) {
 	//objStr, _ := json.MarshalIndent(balanceList, "", " ")
 	//t.Logf("balance list:%v", string(objStr))
 
-	for i:=0; i<len(balanceList); i++ {
-		t.Logf("%s: %s\n",addrs[i], balanceList[i].Balance.ConfirmBalance)
+	for i := 0; i < len(balanceList); i++ {
+		t.Logf("%s: %s\n", addrs[i], balanceList[i].Balance.ConfirmBalance)
 	}
 }

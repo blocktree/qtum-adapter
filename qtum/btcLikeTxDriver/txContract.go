@@ -3,8 +3,8 @@ package btcLikeTxDriver
 import (
 	"encoding/hex"
 	"github.com/blocktree/go-owcdrivers/addressEncoder"
+	"github.com/blocktree/openwallet/v2/log"
 	"strconv"
-	"github.com/blocktree/openwallet/log"
 )
 
 type TxContract struct {
@@ -20,8 +20,8 @@ type TxContract struct {
 }
 
 var (
-	//小数位长度
-	//coinDecimal decimal.Decimal = decimal.NewFromFloat(100000000)
+//小数位长度
+//coinDecimal decimal.Decimal = decimal.NewFromFloat(100000000)
 )
 
 func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContract, error) {
@@ -34,7 +34,7 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 
 	//十进制转十六进制
 	//gasLimit
-	gasLimitInt, err := strconv.ParseInt(vcontract.GasLimit,10,64)
+	gasLimitInt, err := strconv.ParseInt(vcontract.GasLimit, 10, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 	}
 
 	//Length of gasLimit
-	lenGasLimitHex := strconv.FormatInt(int64(len(gasLimit)),16)
+	lenGasLimitHex := strconv.FormatInt(int64(len(gasLimit)), 16)
 	if len(lenGasLimitHex)%2 == 1 {
 		lenGasLimitHex = "0" + lenGasLimitHex
 	}
@@ -58,7 +58,7 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 	}
 
 	//gasPrice
-	gasPriceInt, err := strconv.ParseInt(vcontract.GasPrice,10,64)
+	gasPriceInt, err := strconv.ParseInt(vcontract.GasPrice, 10, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 	}
 
 	//length of gasPrice
-	lenGasPriceHex := strconv.FormatInt(int64(len(gasPrice)),16)
+	lenGasPriceHex := strconv.FormatInt(int64(len(gasPrice)), 16)
 	if len(lenGasPriceHex)%2 == 1 {
 		lenGasPriceHex = "0" + lenGasPriceHex
 	}
@@ -88,17 +88,16 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 	defaultLen := 64
 	addLen := defaultLen - len(hexAmount)
 	var bytesArg string
-	for i := 0; i<addLen; i++ {
+	for i := 0; i < addLen; i++ {
 		bytesArg = bytesArg + "0"
 	}
 	bytesArg = bytesArg + hexAmount
-
 
 	//addrTo32bytesArg
 	var addressToHash160 []byte
 	if isTestNet {
 		addressToHash160, _ = addressEncoder.AddressDecode(vcontract.To, addressEncoder.QTUM_testnetAddressP2PKH)
-	}else {
+	} else {
 		addressToHash160, _ = addressEncoder.AddressDecode(vcontract.To, addressEncoder.QTUM_mainnetAddressP2PKH)
 	}
 
@@ -117,7 +116,7 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 	if int64(len(vcontract.ContractAddr))%2 == 1 {
 		log.Errorf("Contract address length error.")
 	}
-	lanAddressHex := strconv.FormatInt(int64(len(vcontract.ContractAddr))/2,16)
+	lanAddressHex := strconv.FormatInt(int64(len(vcontract.ContractAddr))/2, 16)
 	lanAddress, err := hex.DecodeString(lanAddressHex)
 	if err != nil {
 		return nil, err
@@ -130,6 +129,6 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 
 	opCall := []byte{0xC2}
 
-	ret = TxContract{vmVersion,lenGasLimit,gasLimit,lenGasPrice,gasPrice,dataHex,lanAddress,contractAddr,opCall}
+	ret = TxContract{vmVersion, lenGasLimit, gasLimit, lenGasPrice, gasPrice, dataHex, lanAddress, contractAddr, opCall}
 	return &ret, nil
 }

@@ -17,10 +17,10 @@ package qtum
 
 import (
 	"encoding/hex"
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openwallet"
 	"github.com/blocktree/go-owcdrivers/addressEncoder"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
 	"net/url"
@@ -180,9 +180,9 @@ func TestContractBaseAddress(t *testing.T) {
 func TestGetAddressTokenBalanceByExplorer(t *testing.T) {
 	token := openwallet.SmartContract{
 		ContractID: "",
-		Address: "f2033ede578e17fa6231047265010445bca8cf1c",
-		Symbol: tw.Symbol(),
-		Decimals: 8,
+		Address:    "f2033ede578e17fa6231047265010445bca8cf1c",
+		Symbol:     tw.Symbol(),
+		Decimals:   8,
 	}
 	raw, err := tw.getAddressTokenBalanceByExplorer(token, "Qb15HZYiDtqozMTXa2MF64dGhKEUbmpHYc")
 	if err != nil {

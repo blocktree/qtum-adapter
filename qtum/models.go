@@ -16,7 +16,7 @@
 package qtum
 
 import (
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/tidwall/gjson"
 )
 

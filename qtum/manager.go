@@ -16,36 +16,37 @@
 package qtum
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/asdine/storm"
+	"github.com/asdine/storm/q"
 	"github.com/astaxie/beego/config"
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/common/file"
-	"github.com/blocktree/openwallet/hdkeystore"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/go-owcdrivers/addressEncoder"
+	"github.com/blocktree/go-owcdrivers/owkeychain"
+	"github.com/blocktree/go-owcrypt"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/common/file"
+	"github.com/blocktree/openwallet/v2/hdkeystore"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
+	"github.com/blocktree/qtum-adapter/qtum_addrdec"
 	"github.com/bndr/gotabulate"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/hdkeychain"
 	"github.com/codeskyblue/go-sh"
-	"errors"
 	"github.com/shopspring/decimal"
-	"github.com/blocktree/openwallet/log"
 	"math"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
-	"github.com/asdine/storm/q"
-	"github.com/blocktree/go-owcrypt"
-	"github.com/blocktree/go-owcdrivers/addressEncoder"
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/blocktree/go-owcdrivers/owkeychain"
-	"encoding/hex"
-	"crypto/rand"
 )
 
-var(
+var (
 	//参与汇总的钱包
 	walletsInSum = make(map[string]*AccountBalance)
 	//汇总地址
@@ -63,19 +64,18 @@ const (
 )
 
 type WalletManager struct {
-
 	openwallet.AssetsAdapterBase
 
-	storage      *hdkeystore.HDKeystore          //秘钥存取
-	walletClient *Client                       // 节点客户端
-	ExplorerClient *Explorer                     // 浏览器API客户端
-	config       *WalletConfig                 //钱包管理配置
-	walletsInSum map[string]*openwallet.Wallet //参与汇总的钱包
-	blockscanner *BTCBlockScanner              //区块扫描器
-	Decoder      openwallet.AddressDecoder     //地址编码器
-	TxDecoder    openwallet.TransactionDecoder //交易单编码器
+	storage         *hdkeystore.HDKeystore          //秘钥存取
+	walletClient    *Client                         // 节点客户端
+	ExplorerClient  *Explorer                       // 浏览器API客户端
+	config          *WalletConfig                   //钱包管理配置
+	walletsInSum    map[string]*openwallet.Wallet   //参与汇总的钱包
+	blockscanner    *BTCBlockScanner                //区块扫描器
+	Decoder         openwallet.AddressDecoderV2     //地址编码器
+	TxDecoder       openwallet.TransactionDecoder   //交易单编码器
 	ContractDecoder openwallet.SmartContractDecoder //
-	Log            *log.OWLogger                 //日志工具
+	Log             *log.OWLogger                   //日志工具
 }
 
 func NewWalletManager() *WalletManager {
@@ -87,7 +87,7 @@ func NewWalletManager() *WalletManager {
 	wm.walletsInSum = make(map[string]*openwallet.Wallet)
 	//区块扫描器
 	wm.blockscanner = NewBTCBlockScanner(&wm)
-	wm.Decoder = NewAddressDecoder(&wm)
+	wm.Decoder = &qtum_addrdec.Default
 	wm.TxDecoder = NewTransactionDecoder(&wm)
 	wm.ContractDecoder = NewContractDecoder(&wm)
 	wm.Log = log.NewOWLogger(wm.Symbol())
@@ -520,7 +520,7 @@ func (wm *WalletManager) CreateNewWallet(name, password string) (*openwallet.Wal
 		WalletID: key.KeyID,
 		Alias:    key.Alias,
 		KeyFile:  keyFile,
-		DBFile:   filepath.Join(wm.config.dbPath, key.FileName() +".db"),
+		DBFile:   filepath.Join(wm.config.dbPath, key.FileName()+".db"),
 	}
 
 	w.SaveToDB()
@@ -617,7 +617,6 @@ func (wm *WalletManager) GetWalletBalance(accountID string) string {
 	return balance.StringFixed(8)
 }
 
-
 //GetAddressBalance 获取地址余额
 func (wm *WalletManager) GetAddressBalance(walletID, address string) string {
 
@@ -639,7 +638,7 @@ func (wm *WalletManager) GetAddressBalance(walletID, address string) string {
 	err = db.Select(q.And(
 		q.Eq("AccountID", walletID),
 		q.Eq("Address", address),
-	)).Find( &utxos)
+	)).Find(&utxos)
 	if err != nil {
 		return "0"
 	}
@@ -653,7 +652,6 @@ func (wm *WalletManager) GetAddressBalance(walletID, address string) string {
 
 	return balance.StringFixed(8)
 }
-
 
 //CreateNewPrivateKey 创建私钥，返回私钥wif格式字符串
 func (wm *WalletManager) CreateNewPrivateKey(accountID string, key *owkeychain.ExtendedKey, derivedPath string, index uint64) (string, *openwallet.Address, error) {
@@ -714,13 +712,13 @@ func (wm *WalletManager) CreateNewPrivateKey(accountID string, key *owkeychain.E
 	}
 
 	addr := openwallet.Address{
-		Address:   address,
-		AccountID: accountID,
-		HDPath:    derivedPath,
+		Address:     address,
+		AccountID:   accountID,
+		HDPath:      derivedPath,
 		CreatedTime: time.Now().Unix(),
-		Symbol:    wm.config.symbol,
-		Index:     index,
-		WatchOnly: false,
+		Symbol:      wm.config.symbol,
+		Index:       index,
+		WatchOnly:   false,
 	}
 
 	//addr := Address{
@@ -1514,7 +1512,7 @@ func (wm *WalletManager) SendBatchTransaction(walletID string, to []string, amou
 	}
 
 	//获取utxo，按小到大排序
-	sort.Sort(UnspentSort{utxos, func (a, b *Unspent) int {
+	sort.Sort(UnspentSort{utxos, func(a, b *Unspent) int {
 
 		if a.Amount > b.Amount {
 			return 1
@@ -1704,7 +1702,6 @@ func (wm *WalletManager) EstimateFee(inputs, outputs int64, feeRate decimal.Deci
 	}
 	return trx_fee, nil
 }
-
 
 //EstimateFeeRate 预估的没KB手续费率
 func (wm *WalletManager) EstimateFeeRate() (decimal.Decimal, error) {
@@ -1926,10 +1923,8 @@ func (wm *WalletManager) loadConfig() error {
 
 	wm.LoadAssetsConfig(c)
 
-
 	return nil
 }
-
 
 //打印钱包列表
 func (wm *WalletManager) printWalletList(list []*openwallet.Wallet) {
@@ -2003,7 +1998,7 @@ func (wm *WalletManager) cmdCall(cmd string, wait bool) error {
 	}
 }
 
-func (wm *WalletManager) GenQtumAddress() (string, error){
+func (wm *WalletManager) GenQtumAddress() (string, error) {
 
 	//prikey := [32]byte{0x95, 0x59, 0xdb, 0xab, 0xf4, 0xd0, 0xb9, 0xf8, 0xae, 0x9a, 0x09, 0x5c, 0x93, 0x0e, 0xed, 0xe9, 0x32, 0xa5, 0x14, 0x76, 0x51, 0x86, 0xf8, 0xeb, 0x6d, 0xc3, 0x61, 0x6d, 0xcd, 0xf6, 0x68, 0xdb}
 
@@ -2013,29 +2008,29 @@ func (wm *WalletManager) GenQtumAddress() (string, error){
 		return "", err
 	}
 
-	fmt.Printf("prikey: %s\n",hex.EncodeToString(prikey))
+	fmt.Printf("prikey: %s\n", hex.EncodeToString(prikey))
 
 	pubkey, _ := owcrypt.GenPubkey(prikey[:], owcrypt.ECC_CURVE_SECP256K1)
 
-	fmt.Printf("pubkey: %s\n",hex.EncodeToString(pubkey))
+	fmt.Printf("pubkey: %s\n", hex.EncodeToString(pubkey))
 
 	pubdata := append([]byte{0x04}, pubkey[:]...)
 
-	fmt.Printf("pubdata: %s\n",hex.EncodeToString(pubdata))
+	fmt.Printf("pubdata: %s\n", hex.EncodeToString(pubdata))
 
 	pubkeyHash := owcrypt.Hash(pubdata, 0, owcrypt.HASH_ALG_HASH160)
 
-	fmt.Printf("pubkeyHash: %s\n",hex.EncodeToString(pubkeyHash))
+	fmt.Printf("pubkeyHash: %s\n", hex.EncodeToString(pubkeyHash))
 
 	address := addressEncoder.AddressEncode(pubkeyHash, addressEncoder.QTUM_mainnetAddressP2PKH)
 
-	fmt.Printf("address: %s\n",address)
+	fmt.Printf("address: %s\n", address)
 
 	return address, nil
 }
 
 //SendFrom 从指定账户发送交易
-func (wm *WalletManager) SendFrom(fromaccount,toaddress,amount string,  password string) (string, error) {
+func (wm *WalletManager) SendFrom(fromaccount, toaddress, amount string, password string) (string, error) {
 
 	request := []interface{}{
 		fromaccount,
@@ -2058,7 +2053,7 @@ func (wm *WalletManager) SendFrom(fromaccount,toaddress,amount string,  password
 }
 
 //SendToAddress 发送交易
-func (wm *WalletManager) SendToAddress(address,amount,comment string,subtractfeefromamount bool, password string) (string, error) {
+func (wm *WalletManager) SendToAddress(address, amount, comment string, subtractfeefromamount bool, password string) (string, error) {
 
 	request := []interface{}{
 		address,
@@ -2085,9 +2080,7 @@ func (wm *WalletManager) SendToAddress(address,amount,comment string,subtractfee
 //GetBalance 获取默认钱包余额
 func (wm *WalletManager) GetBalance() string {
 
-	request := []interface{}{
-
-	}
+	request := []interface{}{}
 
 	balance, err := wm.walletClient.Call("getbalance", request)
 	if err != nil {
@@ -2098,7 +2091,7 @@ func (wm *WalletManager) GetBalance() string {
 }
 
 //ImportAddress 导入地址核心钱包
-func (wm *WalletManager)  ImportAddress(address *openwallet.Address) error {
+func (wm *WalletManager) ImportAddress(address *openwallet.Address) error {
 
 	request := []interface{}{
 		address.Address,

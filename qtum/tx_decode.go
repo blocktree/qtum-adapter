@@ -19,7 +19,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/blocktree/qtum-adapter/qtum/btcLikeTxDriver"
 	"github.com/shopspring/decimal"
 	"sort"

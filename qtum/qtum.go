@@ -19,17 +19,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/config"
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/console"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openwallet"
-	"github.com/blocktree/openwallet/timer"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/console"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
+	"github.com/blocktree/openwallet/v2/timer"
 	//"github.com/blocktree/openwallet/timer"
 	"github.com/shopspring/decimal"
 	"path/filepath"
 	"strings"
 )
-
 
 //初始化配置流程
 func (wm *WalletManager) InitConfigFlow() error {
@@ -379,7 +378,6 @@ func (wm *WalletManager) TransferFlow() error {
 //GetWalletList 获取钱包列表
 func (wm *WalletManager) GetWalletList() error {
 
-
 	//先加载是否有配置文件
 	err := wm.loadConfig()
 	if err != nil {
@@ -451,7 +449,6 @@ func (wm *WalletManager) RestoreWalletFlow() error {
 
 }
 
-
 //InstallNode 安装节点
 func (wm *WalletManager) InstallNodeFlow() error {
 	return errors.New("Install node is unsupport now. ")
@@ -518,7 +515,7 @@ func (wm *WalletManager) Decimal() int32 {
 }
 
 //AddressDecode 地址解析器
-func (wm *WalletManager) GetAddressDecode() openwallet.AddressDecoder {
+func (wm *WalletManager) GetAddressDecoderV2() openwallet.AddressDecoderV2 {
 	return wm.Decoder
 }
 
@@ -589,7 +586,7 @@ func (wm *WalletManager) ImportWatchOnlyAddress(address ...*openwallet.Address) 
 func (wm *WalletManager) GetAddressWithBalance(address ...*openwallet.Address) error {
 
 	var (
-		addressMap = make(map[string]*openwallet.Address)
+		addressMap  = make(map[string]*openwallet.Address)
 		searchAddrs = make([]string, 0)
 	)
 
@@ -598,7 +595,6 @@ func (wm *WalletManager) GetAddressWithBalance(address ...*openwallet.Address) e
 	//if err != nil {
 	//	return err
 	//}
-
 
 	for _, address := range address {
 		searchAddrs = append(searchAddrs, address.Address)
@@ -624,7 +620,6 @@ func (wm *WalletManager) GetAddressWithBalance(address ...*openwallet.Address) e
 	return nil
 
 }
-
 
 //LoadAssetsConfig 加载外部配置
 func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {

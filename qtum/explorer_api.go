@@ -18,8 +18,8 @@ package qtum
 import (
 	"errors"
 	"fmt"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/imroc/req"
 	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
@@ -171,7 +171,6 @@ func (wm *WalletManager) listUnspentByExplorer(address ...string) ([]*Unspent, e
 		utxos = make([]*Unspent, 0)
 	)
 
-
 	for _, addr := range address {
 
 		path := fmt.Sprintf("address/%s/utxo", addr)
@@ -192,7 +191,7 @@ func (wm *WalletManager) listUnspentByExplorer(address ...string) ([]*Unspent, e
 
 }
 
-func (wm *WalletManager)newUnspentByExplorer(json *gjson.Result) *Unspent {
+func (wm *WalletManager) newUnspentByExplorer(json *gjson.Result) *Unspent {
 	obj := &Unspent{}
 	//解析json
 	obj.TxID = gjson.Get(json.Raw, "transactionId").String()
@@ -357,7 +356,6 @@ func newTokenReceiptByExplorer(json *gjson.Result, isTestnet bool) *TokenReceipt
 	obj.To = gjson.Get(json.Raw, "to").String()
 	obj.Amount = gjson.Get(json.Raw, "value").String()
 	obj.ContractAddress = "0x" + gjson.Get(json.Raw, "addressHex").String()
-
 
 	//obj.BlockHash = gjson.Get(json.Raw, "blockHash").String()
 	//obj.BlockHeight = gjson.Get(json.Raw, "blockNumber").Uint()
@@ -605,7 +603,7 @@ func (wm *WalletManager) getAddressTokenBalanceByExplorer(token openwallet.Smart
 		return decimal.New(0, 0), err
 	}
 
-	if qrc20Balances := result.Get("qrc20Balances");qrc20Balances.IsArray() {
+	if qrc20Balances := result.Get("qrc20Balances"); qrc20Balances.IsArray() {
 		for _, qrc20 := range qrc20Balances.Array() {
 			contractAddr := qrc20.Get("addressHex").String()
 			if contractAddr == trimContractAddr {
