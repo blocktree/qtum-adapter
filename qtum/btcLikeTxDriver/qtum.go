@@ -1,16 +1,27 @@
 package btcLikeTxDriver
 
-const (
-	//mainnet
-	mainNetP2PKHPrefix  = byte(0x3A)
-	mainNetP2SHPrefix   = byte(0x32)
+type AddressPrefix struct {
+	P2PKHPrefix  []byte
+	P2SHPrefix   []byte
+	Bech32Prefix string
+}
 
-	//testnet
-	testNetP2PKHPrefix  = byte(0x78)
-	testNetP2SHPrefix   = byte(0x6E)
-
-	Bech32Prefix = "tb1"
+var (
+	QTUMMainnetAddressPrefix = AddressPrefix{[]byte{0x3A}, []byte{0x32}, "bc"}
+	QTUMTestnetAddressPrefix = AddressPrefix{[]byte{0x78}, []byte{0x6E}, "tb"}
 )
+
+//const (
+//	//mainnet
+//	mainNetP2PKHPrefix  = byte(0x3A)
+//	mainNetP2SHPrefix   = byte(0x32)
+//
+//	//testnet
+//	testNetP2PKHPrefix  = byte(0x78)
+//	testNetP2SHPrefix   = byte(0x6E)
+//
+//	Bech32Prefix = "tb1"
+//)
 
 const (
 	SequenceFinal        = uint32(0xFFFFFFFF)

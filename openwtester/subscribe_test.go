@@ -73,13 +73,9 @@ func TestSubscribeAddress(t *testing.T) {
 		}
 	)
 
-	//GetSourceKeyByAddress 获取地址对应的数据源标识
-	scanAddressFunc := func(address string) (string, bool) {
-		key, ok := addrs[address]
-		if !ok {
-			return "", false
-		}
-		return key, true
+	scanTargetFunc := func(target openwallet.ScanTargetParam) openwallet.ScanTargetResult {
+		sourceKey, ok := addrs[target.ScanTarget]
+		return openwallet.ScanTargetResult{SourceKey: sourceKey, Exist: ok, TargetInfo: nil,}
 	}
 
 	assetsMgr, err := openw.GetAssetsAdapter(symbol)
@@ -118,7 +114,7 @@ func TestSubscribeAddress(t *testing.T) {
 		return
 	}
 
-	scanner.SetBlockScanAddressFunc(scanAddressFunc)
+	scanner.SetBlockScanTargetFuncV2(scanTargetFunc)
 
 	sub := subscriberSingle{}
 	scanner.AddObserver(&sub)

@@ -1715,16 +1715,16 @@ func (wm *WalletManager) EstimateFeeRate() (decimal.Decimal, error) {
 //estimateFeeRateByCore 预估的没KB手续费率
 func (wm *WalletManager) estimateFeeRateByCore() (decimal.Decimal, error) {
 
-	defaultRate, _ := decimal.NewFromString("0.004")
+	defaultRate := wm.Config.MinFees
 
 	//估算交易大小 手续费
 	request := []interface{}{
 		2,
 	}
 
-	result, err := wm.WalletClient.Call("estimatefee", request)
+	result, err := wm.WalletClient.Call("estimatesmartfee", request)
 	if err != nil {
-		return decimal.New(0, 0), err
+		return defaultRate, err
 	}
 
 	feeRate, _ := decimal.NewFromString(result.String())

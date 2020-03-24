@@ -32,7 +32,7 @@ type Contract struct {
 	//	HashType []byte
 }
 
-func newTransaction(vins []Vin, vouts []Vout, lockTime uint32, replaceable bool, isTestNet bool) (*Transaction, error) {
+func newTransaction(vins []Vin, vouts []Vout, lockTime uint32, replaceable bool, addressPrefix AddressPrefix) (*Transaction, error) {
 	txIn, err := newTxInForEmptyTrans(vins)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func newTransaction(vins []Vin, vouts []Vout, lockTime uint32, replaceable bool,
 		txIn[i].setSequence(lockTime, replaceable)
 	}
 
-	txOut, err := newTxOutForEmptyTrans(vouts, isTestNet)
+	txOut, err := newTxOutForEmptyTrans(vouts, addressPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (t Transaction) encodeToBytes() ([]byte, error) {
 	return ret, nil
 }
 
-func newQRC20TokenTransaction(vins []Vin, vcontract Vcontract, vout []Vout, lockTime uint32, replaceable bool, isTestNet bool) (*Contract, error) {
+func newQRC20TokenTransaction(vins []Vin, vcontract Vcontract, vout []Vout, lockTime uint32, replaceable bool, addressPrefix AddressPrefix) (*Contract, error) {
 	txIn, err := newTxInForEmptyTrans(vins)
 	if err != nil {
 		return nil, err
@@ -166,12 +166,12 @@ func newQRC20TokenTransaction(vins []Vin, vcontract Vcontract, vout []Vout, lock
 		txIn[i].setSequence(lockTime, replaceable)
 	}
 
-	txContract, err := newTxContractForEmptyTrans(vcontract, isTestNet)
+	txContract, err := newTxContractForEmptyTrans(vcontract)
 	if err != nil {
 		return nil, err
 	}
 
-	txOut, err := newTxOutForEmptyTrans(vout, isTestNet)
+	txOut, err := newTxOutForEmptyTrans(vout, addressPrefix)
 	if err != nil {
 		return nil, err
 	}

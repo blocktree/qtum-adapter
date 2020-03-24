@@ -165,8 +165,8 @@ func DecodeCheck(address string) (byte, []byte, error) {
 	return ret[0], ret[1 : len(ret)-4], nil
 }
 
-func EncodeCheck(prefix byte, hash []byte) string {
-	data := append([]byte{prefix}, hash...)
+func EncodeCheck(prefix []byte, hash []byte) string {
+	data := append(prefix, hash...)
 	checksum := owcrypt.Hash(data, 0, owcrypt.HASH_ALG_DOUBLE_SHA256)[:4]
 	data = append(data, checksum...)
 	return Encode(data, BitcoinAlphabet)

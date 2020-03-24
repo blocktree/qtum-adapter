@@ -17,6 +17,7 @@ package qtum
 
 import (
 	"fmt"
+	"github.com/blocktree/qtum-adapter/qtum/btcLikeTxDriver"
 	"path/filepath"
 	"strings"
 	"time"
@@ -113,6 +114,10 @@ type WalletConfig struct {
 	TokenTransferCost string
 	//最低手续费
 	MinFees decimal.Decimal
+	//主网地址前缀
+	MainNetAddressPrefix btcLikeTxDriver.AddressPrefix
+	//测试网地址前缀
+	TestNetAddressPrefix btcLikeTxDriver.AddressPrefix
 }
 
 func NewConfig(symbol string) *WalletConfig {
@@ -171,44 +176,8 @@ func NewConfig(symbol string) *WalletConfig {
 	//后台数据源类型
 	c.RPCServerType = RPCServerCore
 
-	//默认配置内容
-	c.defaultConfig = `
-# start node command
-startNodeCMD = ""
-# stop node command
-stopNodeCMD = ""
-# node install path
-nodeInstallPath = ""
-# mainnet data path
-mainNetDataPath = ""
-# testnet data path
-testNetDataPath = ""
-# RPC Server Type，0: CoreWallet RPC; 1: Explorer API
-rpcServerType = 0
-# Qtum api url
-chainAPI = ""
-# Qtum server url
-apiURL = ""
-# Qtum wallet api url
-walletAPI = ""
-# RPC Authentication Username
-rpcUser = ""
-# RPC Authentication Password
-rpcPassword = ""
-# Is network test?
-isTestNet = false
-# the safe address that wallet send money to.
-sumAddress = ""
-# when wallet's balance is over this value, the wallet will send money to [sumAddress]
-threshold = ""
-# wallet data path
-walletDataPath = ""
-# summary task timer cycle time, sample: 1h, 1h1m , 2m, 30s, 3m20s etc...
-cycleSeconds = ""
-`
-	//file.MkdirAll(c.dbPath)
-	//file.MkdirAll(c.backupDir)
-	//file.MkdirAll(c.keyDir)
+	c.MainNetAddressPrefix = btcLikeTxDriver.QTUMMainnetAddressPrefix
+	c.TestNetAddressPrefix = btcLikeTxDriver.QTUMTestnetAddressPrefix
 
 	return &c
 }

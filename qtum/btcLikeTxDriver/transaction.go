@@ -40,8 +40,8 @@ const (
 	DefaultHashType  = uint32(1)
 )
 
-func CreateEmptyRawTransaction(vins []Vin, vouts []Vout, lockTime uint32, replaceable bool, isTestNet bool) (string, error) {
-	emptyTrans, err := newTransaction(vins, vouts, lockTime, replaceable, isTestNet)
+func CreateEmptyRawTransaction(vins []Vin, vouts []Vout, lockTime uint32, replaceable bool, addressPrefix AddressPrefix) (string, error) {
+	emptyTrans, err := newTransaction(vins, vouts, lockTime, replaceable, addressPrefix)
 	if err != nil {
 		return "", err
 	}
@@ -54,8 +54,8 @@ func CreateEmptyRawTransaction(vins []Vin, vouts []Vout, lockTime uint32, replac
 	return hex.EncodeToString(txBytes), nil
 }
 
-func CreateQRC20TokenEmptyRawTransaction(vins []Vin, contract Vcontract, vout []Vout, lockTime uint32, replaceable bool, isTestNet bool) (string, error) {
-	emptyTrans, err := newQRC20TokenTransaction(vins, contract, vout, lockTime, replaceable, isTestNet)
+func CreateQRC20TokenEmptyRawTransaction(vins []Vin, contract Vcontract, vout []Vout, lockTime uint32, replaceable bool, addressPrefix AddressPrefix) (string, error) {
+	emptyTrans, err := newQRC20TokenTransaction(vins, contract, vout, lockTime, replaceable, addressPrefix)
 	if err != nil {
 		return "", err
 	}

@@ -2,7 +2,6 @@ package btcLikeTxDriver
 
 import (
 	"encoding/hex"
-	"github.com/blocktree/go-owcdrivers/addressEncoder"
 	"github.com/blocktree/openwallet/v2/log"
 	"strconv"
 )
@@ -24,7 +23,7 @@ var (
 //coinDecimal decimal.Decimal = decimal.NewFromFloat(100000000)
 )
 
-func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContract, error) {
+func newTxContractForEmptyTrans(vcontract Vcontract) (*TxContract, error) {
 	var ret TxContract
 
 	vmVersion, err := hex.DecodeString("0104")
@@ -94,12 +93,17 @@ func newTxContractForEmptyTrans(vcontract Vcontract, isTestNet bool) (*TxContrac
 	bytesArg = bytesArg + hexAmount
 
 	//addrTo32bytesArg
-	var addressToHash160 []byte
-	if isTestNet {
-		addressToHash160, _ = addressEncoder.AddressDecode(vcontract.To, addressEncoder.QTUM_testnetAddressP2PKH)
-	} else {
-		addressToHash160, _ = addressEncoder.AddressDecode(vcontract.To, addressEncoder.QTUM_mainnetAddressP2PKH)
+	//var addressToHash160 []byte
+	_, addressToHash160, err := DecodeCheck(vcontract.To)
+	if err != nil {
+		return nil, err
 	}
+
+	//if isTestNet {
+	//	addressToHash160, _ = addressEncoder.AddressDecode(vcontract.To, addressEncoder.QTUM_testnetAddressP2PKH)
+	//} else {
+	//	addressToHash160, _ = addressEncoder.AddressDecode(vcontract.To, addressEncoder.QTUM_mainnetAddressP2PKH)
+	//}
 
 	//fmt.Printf("addressToHash160: %s\n",hex.EncodeToString(addressToHash160))
 	addrTo32bytesArg := append([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, addressToHash160[:]...)

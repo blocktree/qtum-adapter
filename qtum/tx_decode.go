@@ -1208,6 +1208,7 @@ func (decoder *TransactionDecoder) createSimpleRawTransaction(
 		txFrom           = make([]string, 0)
 		txTo             = make([]string, 0)
 		accountID        = rawTx.Account.AccountID
+		addressPrefix    btcLikeTxDriver.AddressPrefix
 	)
 
 	if len(usedUTXO) == 0 {
@@ -1261,8 +1262,14 @@ func (decoder *TransactionDecoder) createSimpleRawTransaction(
 	//追加手续费支持
 	replaceable := false
 
+	if decoder.wm.Config.isTestNet {
+		addressPrefix = decoder.wm.Config.TestNetAddressPrefix
+	} else {
+		addressPrefix = decoder.wm.Config.MainNetAddressPrefix
+	}
+
 	/////////构建空交易单
-	emptyTrans, err := btcLikeTxDriver.CreateEmptyRawTransaction(vins, vouts, lockTime, replaceable, decoder.wm.Config.isTestNet)
+	emptyTrans, err := btcLikeTxDriver.CreateEmptyRawTransaction(vins, vouts, lockTime, replaceable, addressPrefix)
 
 	if err != nil {
 		return fmt.Errorf("create transaction failed, unexpected error: %v", err)
@@ -1338,6 +1345,7 @@ func (decoder *TransactionDecoder) createQRC2ORawTransaction(
 		txFrom           = make([]string, 0)
 		txTo             = make([]string, 0)
 		accountID        = rawTx.Account.AccountID
+		addressPrefix    btcLikeTxDriver.AddressPrefix
 	)
 
 	if len(usedUTXO) == 0 {
@@ -1414,8 +1422,14 @@ func (decoder *TransactionDecoder) createQRC2ORawTransaction(
 	//追加手续费支持
 	replaceable := false
 
+	if decoder.wm.Config.isTestNet {
+		addressPrefix = decoder.wm.Config.TestNetAddressPrefix
+	} else {
+		addressPrefix = decoder.wm.Config.MainNetAddressPrefix
+	}
+
 	/////////构建空交易单
-	emptyTrans, err := btcLikeTxDriver.CreateQRC20TokenEmptyRawTransaction(vins, vcontract, vouts, lockTime, replaceable, decoder.wm.Config.isTestNet)
+	emptyTrans, err := btcLikeTxDriver.CreateQRC20TokenEmptyRawTransaction(vins, vcontract, vouts, lockTime, replaceable, addressPrefix)
 
 	if err != nil {
 		return fmt.Errorf("create transaction failed, unexpected error: %v", err)
