@@ -232,7 +232,7 @@ func TestCreateNewPrivateKey(t *testing.T) {
 	t.Logf("CreateNewPrivateKey timestamp = %v \n", timestamp)
 
 	derivedPath := fmt.Sprintf("%s/%d", key.RootPath, timestamp)
-	childKey, _ := key.DerivedKeyWithPath(derivedPath, tw.config.CurveType)
+	childKey, _ := key.DerivedKeyWithPath(derivedPath, tw.Config.CurveType)
 
 	for i := 0; i < count; i++ {
 
@@ -307,9 +307,9 @@ func TestGetWalleInfo(t *testing.T) {
 
 
 //func TestBackupWalletData(t *testing.T) {
-//	tw.config.walletDataPath = "/home/www/btc/testdata/testnet3/"
+//	tw.Config.walletDataPath = "/home/www/btc/testdata/testnet3/"
 //	tmpWalletDat := fmt.Sprintf("tmp-walllet-%d.dat", time.Now().Unix())
-//	backupFile := filepath.Join(tw.config.walletDataPath, tmpWalletDat)
+//	backupFile := filepath.Join(tw.Config.walletDataPath, tmpWalletDat)
 //	err := tw.BackupWalletData(backupFile)
 //	if err != nil {
 //		t.Errorf("BackupWallet failed unexpected error: %v\n", err)
@@ -332,7 +332,7 @@ func TestDumpWallet(t *testing.T) {
 func TestGOSH(t *testing.T) {
 	//text, err := sh.Command("go", "env").Output()
 	//text, err := sh.Command("wmd", "version").Output()
-	text, err := sh.Command("wmd", "config", "see", "-s", "qtum").Output()
+	text, err := sh.Command("wmd", "Config", "see", "-s", "qtum").Output()
 	if err != nil {
 		t.Errorf("GOSH failed unexpected error: %v\n", err)
 	} else {
@@ -497,7 +497,7 @@ func TestGetNetworkInfo(t *testing.T) {
 }
 
 func TestPrintConfig(t *testing.T) {
-	tw.config.printConfig()
+	tw.Config.printConfig()
 }
 
 func TestBackupWallet(t *testing.T) {

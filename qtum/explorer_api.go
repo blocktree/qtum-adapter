@@ -158,7 +158,7 @@ func (wm *WalletManager) getTransactionByExplorer(txid string) (*Transaction, er
 		return nil, err
 	}
 
-	tx := wm.newTxByExplorer(result, wm.config.isTestNet)
+	tx := wm.newTxByExplorer(result, wm.Config.isTestNet)
 
 	return tx, nil
 
@@ -524,7 +524,7 @@ func (wm *WalletManager) getMultiAddrTransactionsByExplorer(offset, limit int, a
 
 	if items := result.Get("items"); items.IsArray() {
 		for _, obj := range items.Array() {
-			tx := wm.newTxByExplorer(&obj, wm.config.isTestNet)
+			tx := wm.newTxByExplorer(&obj, wm.Config.isTestNet)
 			trxs = append(trxs, tx)
 		}
 	}
@@ -594,7 +594,7 @@ func (wm *WalletManager) getAddressTokenBalanceByExplorer(token openwallet.Smart
 
 	trimContractAddr := strings.TrimPrefix(token.Address, "0x")
 
-	//tokenAddressBase := HashAddressToBaseAddress(trimContractAddr, wm.config.isTestNet)
+	//tokenAddressBase := HashAddressToBaseAddress(trimContractAddr, wm.Config.isTestNet)
 
 	path := fmt.Sprintf("address/%s", address)
 

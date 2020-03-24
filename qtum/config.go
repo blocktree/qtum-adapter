@@ -32,8 +32,8 @@ import (
 	执行wmd wallet -s <symbol> 命令会先检查是否存在该币种钱包的配置文件。
 	没有：执行ConfigFlow，配置文件初始化。
 	有：执行常规命令。
-	使用者还可以通过wmd config -s 进行修改配置文件。
-	或执行wmd config flow 重新进行一次配置初始化流程。
+	使用者还可以通过wmd Config -s 进行修改配置文件。
+	或执行wmd Config flow 重新进行一次配置初始化流程。
 
 */
 
@@ -115,12 +115,12 @@ type WalletConfig struct {
 	MinFees decimal.Decimal
 }
 
-func NewConfig() *WalletConfig {
+func NewConfig(symbol string) *WalletConfig {
 
 	c := WalletConfig{}
 
 	//币种
-	c.symbol = Symbol
+	c.symbol = symbol
 	c.masterKey = MasterKey
 	c.CurveType = CurveType
 
@@ -213,7 +213,7 @@ cycleSeconds = ""
 	return &c
 }
 
-//printConfig Print config information
+//printConfig Print Config information
 func (wc *WalletConfig) printConfig() error {
 
 	wc.initConfig()

@@ -199,7 +199,7 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 		}
 
 		//尽可能筹够最大input数
-		unspentLimit := decoder.wm.config.maxTxInputs - len(sumUnspents)
+		unspentLimit := decoder.wm.Config.maxTxInputs - len(sumUnspents)
 		if unspentLimit > 0 {
 			if len(unspents) > unspentLimit {
 				for i := 0; i < unspentLimit; i++ {
@@ -218,7 +218,7 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 		}
 
 		//如果utxo已经超过最大输入，或遍历地址完结，就可以进行构建交易单
-		if i == len(sumAddresses)-1 || len(sumUnspents) >= decoder.wm.config.maxTxInputs {
+		if i == len(sumAddresses)-1 || len(sumUnspents) >= decoder.wm.Config.maxTxInputs {
 			//执行构建交易单工作
 			//decoder.wm.Log.Debugf("sumUnspents: %+v", sumUnspents)
 			//计算手续费，构建交易单inputs，地址保留余额>0，地址需要加入输出，最后+1是汇总地址
@@ -379,7 +379,7 @@ func (decoder *TransactionDecoder) CreateQRC20RawTransaction(wrapper openwallet.
 	for _, address := range address {
 
 		//查找地址token余额
-		tokenBalance, checkErr := decoder.wm.GetQRC20Balance(rawTx.Coin.Contract, address.Address, decoder.wm.config.isTestNet)
+		tokenBalance, checkErr := decoder.wm.GetQRC20Balance(rawTx.Coin.Contract, address.Address, decoder.wm.Config.isTestNet)
 		if checkErr != nil {
 			return checkErr
 		}
@@ -522,8 +522,8 @@ func (decoder *TransactionDecoder) CreateQRC20RawTransaction(wrapper openwallet.
 	}
 
 	//UTXO如果大于设定限制，则分拆成多笔交易单发送
-	if len(usedUTXO) > decoder.wm.config.maxTxInputs {
-		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.config.maxTxInputs)
+	if len(usedUTXO) > decoder.wm.Config.maxTxInputs {
+		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.Config.maxTxInputs)
 		return errors.New(errStr)
 	}
 
@@ -595,7 +595,7 @@ func (decoder *TransactionDecoder) CreateQRC20SummaryRawTransaction(wrapper open
 	tokenDecimals := int32(sumRawTx.Coin.Contract.Decimals)
 
 	//合约手续费在普通交易基础上加0.1个qtum, 小数点8位
-	transferCost, _ := decimal.NewFromString(decoder.wm.config.TokenTransferCost)
+	transferCost, _ := decimal.NewFromString(decoder.wm.Config.TokenTransferCost)
 	//coinDecimals := decoder.wm.Decimal()
 
 	if minTransfer.LessThan(retainedBalance) {
@@ -641,7 +641,7 @@ func (decoder *TransactionDecoder) CreateQRC20SummaryRawTransaction(wrapper open
 		tokenOutputAddrs = make(map[string]string, 0)
 		//decoder.wm.Log.Debug("address.Address:", address.Address)
 		//查找地址token余额
-		tokenBalance, createErr := decoder.wm.GetQRC20Balance(sumRawTx.Coin.Contract, address.Address, decoder.wm.config.isTestNet)
+		tokenBalance, createErr := decoder.wm.GetQRC20Balance(sumRawTx.Coin.Contract, address.Address, decoder.wm.Config.isTestNet)
 		if createErr != nil {
 			continue
 		}
@@ -1143,8 +1143,8 @@ func (decoder *TransactionDecoder) createSimpleRawTransactionWithUTXO(
 	}
 
 	//UTXO如果大于设定限制，则分拆成多笔交易单发送
-	if len(usedUTXO) > decoder.wm.config.maxTxInputs {
-		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.config.maxTxInputs)
+	if len(usedUTXO) > decoder.wm.Config.maxTxInputs {
+		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.Config.maxTxInputs)
 		return errors.New(errStr)
 	}
 
@@ -1231,8 +1231,8 @@ func (decoder *TransactionDecoder) createSimpleRawTransaction(
 	}
 
 	//UTXO如果大于设定限制，则分拆成多笔交易单发送
-	if len(usedUTXO) > decoder.wm.config.maxTxInputs {
-		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.config.maxTxInputs)
+	if len(usedUTXO) > decoder.wm.Config.maxTxInputs {
+		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.Config.maxTxInputs)
 		return errors.New(errStr)
 	}
 
@@ -1262,7 +1262,7 @@ func (decoder *TransactionDecoder) createSimpleRawTransaction(
 	replaceable := false
 
 	/////////构建空交易单
-	emptyTrans, err := btcLikeTxDriver.CreateEmptyRawTransaction(vins, vouts, lockTime, replaceable, decoder.wm.config.isTestNet)
+	emptyTrans, err := btcLikeTxDriver.CreateEmptyRawTransaction(vins, vouts, lockTime, replaceable, decoder.wm.Config.isTestNet)
 
 	if err != nil {
 		return fmt.Errorf("create transaction failed, unexpected error: %v", err)
@@ -1295,7 +1295,7 @@ func (decoder *TransactionDecoder) createSimpleRawTransaction(
 		}
 
 		signature := openwallet.KeySignature{
-			EccType: decoder.wm.config.CurveType,
+			EccType: decoder.wm.Config.CurveType,
 			Nonce:   "",
 			Address: addr,
 			Message: beSignHex,
@@ -1372,8 +1372,8 @@ func (decoder *TransactionDecoder) createQRC2ORawTransaction(
 	}
 
 	//UTXO如果大于设定限制，则分拆成多笔交易单发送
-	if len(usedUTXO) > decoder.wm.config.maxTxInputs {
-		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.config.maxTxInputs)
+	if len(usedUTXO) > decoder.wm.Config.maxTxInputs {
+		errStr := fmt.Sprintf("The transaction is use max inputs over: %d", decoder.wm.Config.maxTxInputs)
 		return errors.New(errStr)
 	}
 
@@ -1415,7 +1415,7 @@ func (decoder *TransactionDecoder) createQRC2ORawTransaction(
 	replaceable := false
 
 	/////////构建空交易单
-	emptyTrans, err := btcLikeTxDriver.CreateQRC20TokenEmptyRawTransaction(vins, vcontract, vouts, lockTime, replaceable, decoder.wm.config.isTestNet)
+	emptyTrans, err := btcLikeTxDriver.CreateQRC20TokenEmptyRawTransaction(vins, vcontract, vouts, lockTime, replaceable, decoder.wm.Config.isTestNet)
 
 	if err != nil {
 		return fmt.Errorf("create transaction failed, unexpected error: %v", err)
@@ -1448,7 +1448,7 @@ func (decoder *TransactionDecoder) createQRC2ORawTransaction(
 		}
 
 		signature := openwallet.KeySignature{
-			EccType: decoder.wm.config.CurveType,
+			EccType: decoder.wm.Config.CurveType,
 			Nonce:   "",
 			Address: addr,
 			Message: beSignHex,

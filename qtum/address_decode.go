@@ -17,115 +17,103 @@ package qtum
 
 import (
 	"encoding/hex"
+	"github.com/blocktree/go-owaddress"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"strings"
 
 	"github.com/blocktree/go-owcdrivers/addressEncoder"
-	"github.com/blocktree/go-owcrypt"
 )
 
-func init() {
+var (
+	alphabet = addressEncoder.BTCAlphabet
+)
 
-}
+var (
 
-//var (
-//	AddressDecoder = &openwallet.AddressDecoder{
-//		PrivateKeyToWIF:    PrivateKeyToWIF,
-//		PublicKeyToAddress: PublicKeyToAddress,
-//		WIFToPrivateKey:    WIFToPrivateKey,
-//		RedeemScriptToAddress: RedeemScriptToAddress,
-//	}
-//)
+	//QTUM stuff
+	QTUM_mainnetAddressP2PKH         = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "h160", 20, []byte{0x3A}, nil}
+	QTUM_mainnetAddressP2SH          = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "h160", 20, []byte{0x32}, nil}
+	QTUM_mainnetPrivateWIF           = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 32, []byte{0x80}, nil}
+	QTUM_mainnetPrivateWIFCompressed = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 32, []byte{0x80}, []byte{0x01}}
+	QTUM_mainnetPublicBIP32          = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 74, []byte{0x04, 0x88, 0xB2, 0x1E}, nil}
+	QTUM_mainnetPrivateBIP32         = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 74, []byte{0x04, 0x88, 0xAD, 0xE4}, nil}
+	QTUM_testnetAddressP2PKH         = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "h160", 20, []byte{0x78}, nil}
+	QTUM_testnetAddressP2SH          = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "h160", 20, []byte{0x6E}, nil}
+	QTUM_testnetPrivateWIF           = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 32, []byte{0xEF}, nil}
+	QTUM_testnetPrivateWIFCompressed = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 32, []byte{0xEF}, []byte{0x01}}
+	QTUM_testnetPublicBIP32          = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 74, []byte{0x04, 0x35, 0x87, 0xCF}, nil}
+	QTUM_testnetPrivateBIP32         = addressEncoder.AddressType{"base58", alphabet, "doubleSHA256", "", 74, []byte{0x04, 0x35, 0x83, 0x94}, nil}
+)
 
-type addressDecoder struct {
-	wm *WalletManager //钱包管理者
+//AddressDecoderV2
+type AddressDecoderV2 struct {
+	*openwallet.AddressDecoderV2Base
+	wm        *WalletManager
+	IsTestNet bool
 }
 
 //NewAddressDecoder 地址解析器
-func NewAddressDecoder(wm *WalletManager) *addressDecoder {
-	decoder := addressDecoder{}
+func NewAddressDecoder(wm *WalletManager) *AddressDecoderV2 {
+	decoder := AddressDecoderV2{}
 	decoder.wm = wm
 	return &decoder
 }
 
-//PrivateKeyToWIF 私钥转WIF
-func (decoder *addressDecoder) PrivateKeyToWIF(priv []byte, isTestnet bool) (string, error) {
+//AddressDecode 地址解析
+func (dec *AddressDecoderV2) AddressDecode(addr string, opts ...interface{}) ([]byte, error) {
 
-	cfg := addressEncoder.QTUM_mainnetPrivateWIFCompressed
-	if decoder.wm.config.isTestNet {
-		cfg = addressEncoder.QTUM_testnetPrivateWIFCompressed
+	cfg := QTUM_mainnetAddressP2PKH
+	if dec.IsTestNet {
+		cfg = QTUM_testnetAddressP2PKH
 	}
 
-	//privateKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), priv)
-	//wif, err := btcutil.NewWIF(privateKey, &cfg, true)
-	//if err != nil {
-	//	return "", err
-	//}
+	if len(opts) > 0 {
+		for _, opt := range opts {
+			if at, ok := opt.(addressEncoder.AddressType); ok {
+				cfg = at
+			}
+		}
+	}
 
-	wif := addressEncoder.AddressEncode(priv, cfg)
-
-	return wif, nil
-
+	return addressEncoder.AddressDecode(addr, cfg)
 }
 
-//PublicKeyToAddress 公钥转地址
-func (decoder *addressDecoder) PublicKeyToAddress(pub []byte, isTestnet bool) (string, error) {
+//AddressEncode 地址编码
+func (dec *AddressDecoderV2) AddressEncode(hash []byte, opts ...interface{}) (string, error) {
 
-	cfg := addressEncoder.QTUM_mainnetAddressP2PKH
-	if decoder.wm.config.isTestNet {
-		cfg = addressEncoder.QTUM_testnetAddressP2PKH
+	cfg := QTUM_mainnetAddressP2PKH
+	if dec.IsTestNet {
+		cfg = QTUM_testnetAddressP2PKH
 	}
 
-	//pkHash := btcutil.Hash160(pub)
-	//address, err :=  btcutil.NewAddressPubKeyHash(pkHash, &cfg)
-	//if err != nil {
-	//	return "", err
-	//}
+	if len(opts) > 0 {
+		for _, opt := range opts {
+			if at, ok := opt.(addressEncoder.AddressType); ok {
+				cfg = at
+			}
+		}
+	}
 
-	pkHash := owcrypt.Hash(pub, 0, owcrypt.HASH_ALG_HASH160)
+	address := addressEncoder.AddressEncode(hash, cfg)
 
-	address := addressEncoder.AddressEncode(pkHash, cfg)
+	if dec.wm.Config.RPCServerType == RPCServerCore {
+		//如果使用core钱包作为全节点，需要导入地址到core，这样才能查询地址余额和utxo
+		err := dec.wm.ImportAddress(address, "")
+		if err != nil {
+			return "", err
+		}
+	}
 
 	return address, nil
-
 }
 
-//RedeemScriptToAddress 多重签名赎回脚本转地址
-func (decoder *addressDecoder) RedeemScriptToAddress(pubs [][]byte, required uint64, isTestnet bool) (string, error) {
-
-	cfg := addressEncoder.QTUM_mainnetAddressP2SH
-	if decoder.wm.config.isTestNet {
-		cfg = addressEncoder.QTUM_testnetAddressP2SH
-	}
-
-	redeemScript := make([]byte, 0)
-
-	for _, pub := range pubs {
-		redeemScript = append(redeemScript, pub...)
-	}
-
-	pkHash := owcrypt.Hash(redeemScript, 0, owcrypt.HASH_ALG_HASH160)
-
-	address := addressEncoder.AddressEncode(pkHash, cfg)
-
-	return address, nil
-
-}
-
-//WIFToPrivateKey WIF转私钥
-func (decoder *addressDecoder) WIFToPrivateKey(wif string, isTestnet bool) ([]byte, error) {
-
-	cfg := addressEncoder.QTUM_mainnetPrivateWIFCompressed
-	if decoder.wm.config.isTestNet {
-		cfg = addressEncoder.QTUM_testnetPrivateWIFCompressed
-	}
-
-	priv, err := addressEncoder.AddressDecode(wif, cfg)
+// AddressVerify 地址校验
+func (dec *AddressDecoderV2) AddressVerify(address string, opts ...interface{}) bool {
+	valid, err := owaddress.Verify("qtum", address)
 	if err != nil {
-		return nil, err
+		return false
 	}
-
-	return priv, err
-
+	return valid
 }
 
 //HashAddressToBaseAddress 哈希地址转编码地址

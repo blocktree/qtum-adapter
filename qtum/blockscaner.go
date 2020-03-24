@@ -394,7 +394,7 @@ func (bs *BTCBlockScanner) RescanFailedRecord() {
 
 //newBlockNotify 获得新区块后，通知给观测者
 func (bs *BTCBlockScanner) newBlockNotify(block *Block, isFork bool) {
-	header := block.BlockHeader()
+	header := block.BlockHeader(bs.wm.Symbol())
 	header.Fork = isFork
 	bs.NewBlockNotify(header)
 }
@@ -1168,7 +1168,7 @@ func (bs *BTCBlockScanner) SaveUnscanRecord(record *openwallet.UnscanRecord) err
 //GetBlockHeight 获取区块链高度
 func (wm *WalletManager) GetBlockHeight() (uint64, error) {
 
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getBlockHeightByExplorer()
 	} else {
 		return wm.getBlockHeightByCore()
@@ -1178,7 +1178,7 @@ func (wm *WalletManager) GetBlockHeight() (uint64, error) {
 //getBlockHeightByCore 获取区块链高度
 func (wm *WalletManager) getBlockHeightByCore() (uint64, error) {
 
-	result, err := wm.walletClient.Call("getblockcount", nil)
+	result, err := wm.WalletClient.Call("getblockcount", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -1240,7 +1240,7 @@ func (bs *BTCBlockScanner) SaveLocalBlock(block *Block) error {
 //GetBlockHash 根据区块高度获得区块hash
 func (wm *WalletManager) GetBlockHash(height uint64) (string, error) {
 
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getBlockHashByExplorer(height)
 	} else {
 		return wm.getBlockHashByCore(height)
@@ -1254,7 +1254,7 @@ func (wm *WalletManager) getBlockHashByCore(height uint64) (string, error) {
 		height,
 	}
 
-	result, err := wm.walletClient.Call("getblockhash", request)
+	result, err := wm.WalletClient.Call("getblockhash", request)
 	if err != nil {
 		return "", err
 	}
@@ -1285,7 +1285,7 @@ func (bs *BTCBlockScanner) GetLocalBlock(height uint64) (*Block, error) {
 //GetBlock 获取区块数据
 func (wm *WalletManager) GetBlock(hash string) (*Block, error) {
 
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getBlockByExplorer(hash)
 	} else {
 		return wm.getBlockByCore(hash)
@@ -1299,7 +1299,7 @@ func (wm *WalletManager) getBlockByCore(hash string) (*Block, error) {
 		hash,
 	}
 
-	result, err := wm.walletClient.Call("getblock", request)
+	result, err := wm.WalletClient.Call("getblock", request)
 	if err != nil {
 		return nil, err
 	}
@@ -1310,7 +1310,7 @@ func (wm *WalletManager) getBlockByCore(hash string) (*Block, error) {
 //GetTxIDsInMemPool 获取待处理的交易池中的交易单IDs
 func (wm *WalletManager) GetTxIDsInMemPool() ([]string, error) {
 
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getTxIDsInMemPoolByExplorer()
 	} else {
 		return wm.getTxIDsInMemPoolByCore()
@@ -1324,7 +1324,7 @@ func (wm *WalletManager) getTxIDsInMemPoolByCore() ([]string, error) {
 		txids = make([]string, 0)
 	)
 
-	result, err := wm.walletClient.Call("getrawmempool", nil)
+	result, err := wm.WalletClient.Call("getrawmempool", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1355,7 +1355,7 @@ func (wm *WalletManager) GetTransaction(txid string) (*Transaction, error) {
 	//
 	//return result, nil
 
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getTransactionByExplorer(txid)
 	} else {
 		return wm.getTransactionByCore(txid)
@@ -1371,18 +1371,18 @@ func (wm *WalletManager) getTransactionByCore(txid string) (*Transaction, error)
 		true,
 	}
 
-	result, err := wm.walletClient.Call("getrawtransaction", request)
+	result, err := wm.WalletClient.Call("getrawtransaction", request)
 	if err != nil {
 		return nil, err
 	}
 
-	return newTxByCore(result, wm.config.isTestNet), nil
+	return newTxByCore(result, wm.Config.isTestNet), nil
 }
 
 //GetTxOut 获取交易单输出信息，用于追溯交易单输入源头
 func (wm *WalletManager) GetTxOut(txid string, vout uint64) (*Vout, error) {
 
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getTxOutByExplorer(txid, vout)
 	} else {
 		return wm.getTxOutByCore(txid, vout)
@@ -1397,12 +1397,12 @@ func (wm *WalletManager) getTxOutByCore(txid string, vout uint64) (*Vout, error)
 		vout,
 	}
 
-	result, err := wm.walletClient.Call("gettxout", request)
+	result, err := wm.WalletClient.Call("gettxout", request)
 	if err != nil {
 		return nil, err
 	}
 
-	output := newTxVoutByCore(result, wm.config.isTestNet)
+	output := newTxVoutByCore(result, wm.Config.isTestNet)
 
 	/*
 		{
@@ -1446,7 +1446,7 @@ func (bs *BTCBlockScanner) DeleteUnscanRecord(height uint64) error {
 //GetAssetsAccountBalanceByAddress 查询账户相关地址的交易记录
 func (bs *BTCBlockScanner) GetBalanceByAddress(address ...string) ([]*openwallet.Balance, error) {
 
-	//if bs.wm.config.RPCServerType != RPCServerExplorer {
+	//if bs.wm.Config.RPCServerType != RPCServerExplorer {
 	//	return nil, nil
 	//}
 	//
@@ -1516,7 +1516,7 @@ func (bs *BTCBlockScanner) GetTransactionsByAddress(offset, limit int, coin open
 func (bs *BTCBlockScanner) Run() error {
 
 	//使用浏览器，开启socketIO监听内存池交易
-	//if bs.wm.config.RPCServerType == RPCServerExplorer {
+	//if bs.wm.Config.RPCServerType == RPCServerExplorer {
 	//	if bs.socketIO == nil {
 	//		go bs.setupSocketIO()
 	//	}
@@ -1550,7 +1550,7 @@ func (bs *BTCBlockScanner) connectSocketIO(disconnected chan struct{}) (*gosocke
 		room = "inv"
 	)
 
-	apiUrl, err := url.Parse(bs.wm.config.serverAPI)
+	apiUrl, err := url.Parse(bs.wm.Config.serverAPI)
 	if err != nil {
 		return nil, err
 	}

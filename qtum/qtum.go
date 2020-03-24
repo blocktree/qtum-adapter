@@ -33,15 +33,15 @@ import (
 //初始化配置流程
 func (wm *WalletManager) InitConfigFlow() error {
 
-	wm.config.initConfig()
-	file := filepath.Join(wm.config.configFilePath, wm.config.configFileName)
-	fmt.Printf("You can run 'vim %s' to edit wallet's config.\n", file)
+	wm.Config.initConfig()
+	file := filepath.Join(wm.Config.configFilePath, wm.Config.configFileName)
+	fmt.Printf("You can run 'vim %s' to edit wallet's Config.\n", file)
 	return nil
 }
 
 //查看配置信息
 func (wm *WalletManager) ShowConfig() error {
-	return wm.config.printConfig()
+	return wm.Config.printConfig()
 }
 
 //创建钱包流程
@@ -166,13 +166,13 @@ func (wm *WalletManager) SummaryFollow() error {
 	}
 
 	//判断汇总地址是否存在
-	if len(wm.config.sumAddress) == 0 {
+	if len(wm.Config.sumAddress) == 0 {
 
-		return errors.New(fmt.Sprintf("Summary address is not set. Please set it in './conf/%s.ini' \n", Symbol))
+		return errors.New(fmt.Sprintf("Summary address is not set. Please set it in './conf/%s.ini' \n", wm.Symbol()))
 	}
 
-	if wm.config.cycleSeconds == 0 {
-		wm.config.cycleSeconds = 30 * 1000
+	if wm.Config.cycleSeconds == 0 {
+		wm.Config.cycleSeconds = 30 * 1000
 	}
 
 	//查询所有钱包信息
@@ -239,10 +239,10 @@ func (wm *WalletManager) SummaryFollow() error {
 		return errors.New("Not summary wallets to register! ")
 	}
 
-	fmt.Printf("The timer for summary has started. Execute by every %v seconds.\n", wm.config.cycleSeconds.Seconds())
+	fmt.Printf("The timer for summary has started. Execute by every %v seconds.\n", wm.Config.cycleSeconds.Seconds())
 
 	//启动钱包汇总程序
-	sumTimer := timer.NewTask(wm.config.cycleSeconds, wm.SummaryWallets)
+	sumTimer := timer.NewTask(wm.Config.cycleSeconds, wm.SummaryWallets)
 	sumTimer.Start()
 
 	<-endRunning
@@ -483,20 +483,20 @@ func (wm *WalletManager) ShowNodeInfo() error {
 
 //SetConfigFlow 初始化配置流程
 func (wm *WalletManager) SetConfigFlow(subCmd string) error {
-	file := wm.config.configFilePath + wm.config.configFileName
-	fmt.Printf("You can run 'vim %s' to edit %s config.\n", file, subCmd)
+	file := wm.Config.configFilePath + wm.Config.configFileName
+	fmt.Printf("You can run 'vim %s' to edit %s Config.\n", file, subCmd)
 	return nil
 }
 
 //ShowConfigInfo 查看配置信息
 func (wm *WalletManager) ShowConfigInfo(subCmd string) error {
-	wm.config.printConfig()
+	wm.Config.printConfig()
 	return nil
 }
 
 //CurveType 曲线类型
 func (wm *WalletManager) CurveType() uint32 {
-	return wm.config.CurveType
+	return wm.Config.CurveType
 }
 
 //FullName 币种全名
@@ -506,7 +506,7 @@ func (wm *WalletManager) FullName() string {
 
 //Symbol 币种标识
 func (wm *WalletManager) Symbol() string {
-	return wm.config.symbol
+	return wm.Config.symbol
 }
 
 //小数位精度
@@ -538,48 +538,6 @@ func (wm *WalletManager) GetBlockScanner() openwallet.BlockScanner {
 
 func (this *WalletManager) GetSmartContractDecoder() openwallet.SmartContractDecoder {
 	return this.ContractDecoder
-}
-
-//ImportWatchOnlyAddress 导入观测地址
-func (wm *WalletManager) ImportWatchOnlyAddress(address ...*openwallet.Address) error {
-
-	//先加载是否有配置文件
-	//err := wm.loadConfig()
-	//if err != nil {
-	//	return nil
-	//}
-
-	var (
-		failedIndex = make([]int, 0)
-	)
-
-	for i, a := range address {
-		log.Debug("start ImportAddress")
-		err := wm.ImportAddress(a)
-		if err != nil {
-			failedIndex = append(failedIndex, i)
-		}
-		log.Debug("end ImportAddress")
-	}
-
-	//failed, err := wm.ImportMulti(address, nil, true)
-	//if err != nil {
-	//	return err
-	//}
-
-	if len(failedIndex) > 0 {
-		failedReason := ""
-
-		for _, index := range failedIndex {
-			failedReason = failedReason + address[index].Address + ", "
-		}
-
-		failedReason = failedReason + "import failed"
-
-		return fmt.Errorf(failedReason)
-	}
-
-	return nil
 }
 
 //GetAddressWithBalance
@@ -624,45 +582,45 @@ func (wm *WalletManager) GetAddressWithBalance(address ...*openwallet.Address) e
 //LoadAssetsConfig 加载外部配置
 func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
 
-	wm.config.RPCServerType, _ = c.Int("rpcServerType")
-	wm.config.serverAPI = c.String("apiURL")
-	//wm.config.threshold, _ = decimal.NewFromString(c.String("threshold"))
-	//wm.config.sumAddress = c.String("sumAddress")
-	wm.config.rpcUser = c.String("rpcUser")
-	wm.config.rpcPassword = c.String("rpcPassword")
-	//wm.config.nodeInstallPath = c.String("nodeInstallPath")
-	wm.config.isTestNet, _ = c.Bool("isTestNet")
-	wm.config.TokenTransferCost = c.String("tokenTransferCost")
-	wm.config.MinFees, _ = decimal.NewFromString(c.String("minFees"))
-	//if wm.config.isTestNet {
-	//	wm.config.walletDataPath = c.String("testNetDataPath")
+	wm.Config.RPCServerType, _ = c.Int("rpcServerType")
+	wm.Config.serverAPI = c.String("apiURL")
+	//wm.Config.threshold, _ = decimal.NewFromString(c.String("threshold"))
+	//wm.Config.sumAddress = c.String("sumAddress")
+	wm.Config.rpcUser = c.String("rpcUser")
+	wm.Config.rpcPassword = c.String("rpcPassword")
+	//wm.Config.nodeInstallPath = c.String("nodeInstallPath")
+	wm.Config.isTestNet, _ = c.Bool("isTestNet")
+	wm.Config.TokenTransferCost = c.String("tokenTransferCost")
+	wm.Config.MinFees, _ = decimal.NewFromString(c.String("minFees"))
+	//if wm.Config.isTestNet {
+	//	wm.Config.walletDataPath = c.String("testNetDataPath")
 	//} else {
-	//	wm.config.walletDataPath = c.String("mainNetDataPath")
+	//	wm.Config.walletDataPath = c.String("mainNetDataPath")
 	//}
 
 	//cyclesec := c.String("cycleSeconds")
 	//
-	//wm.config.cycleSeconds, _ = time.ParseDuration(cyclesec)
+	//wm.Config.cycleSeconds, _ = time.ParseDuration(cyclesec)
 
-	token := basicAuth(wm.config.rpcUser, wm.config.rpcPassword)
+	token := basicAuth(wm.Config.rpcUser, wm.Config.rpcPassword)
 
-	if wm.config.RPCServerType == RPCServerCore {
-		wm.walletClient = NewClient(wm.config.serverAPI, token, false)
+	if wm.Config.RPCServerType == RPCServerCore {
+		wm.WalletClient = NewClient(wm.Config.serverAPI, token, false)
 	} else {
-		wm.ExplorerClient = NewExplorer(wm.config.serverAPI, false)
+		wm.ExplorerClient = NewExplorer(wm.Config.serverAPI, false)
 	}
 
-	wm.config.DataDir = c.String("dataDir")
+	wm.Config.DataDir = c.String("dataDir")
 
 	//数据文件夹
-	wm.config.makeDataDir()
+	wm.Config.makeDataDir()
 
 	return nil
 }
 
 //InitAssetsConfig 初始化默认配置
 func (wm *WalletManager) InitAssetsConfig() (config.Configer, error) {
-	return config.NewConfigData("ini", []byte(wm.config.defaultConfig))
+	return config.NewConfigData("ini", []byte(wm.Config.defaultConfig))
 }
 
 //GetAssetsLogger 获取资产账户日志工具

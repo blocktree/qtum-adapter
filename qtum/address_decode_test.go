@@ -20,17 +20,29 @@ import (
 	"testing"
 )
 
-func TestAddressDecoder_PublicKeyToAddress(t *testing.T) {
-	pub, _ := hex.DecodeString("032144da84e7c0037014be1332617ceec15d3561dc209a1d984bf74677a41a63d0")
+func TestAddressDecoder_AddressEncode(t *testing.T) {
 
-	decoder := addressDecoder{}
+	addrdec := tw.GetAddressDecoderV2()
+	p2pk, _ := hex.DecodeString("d3e7f1c96a7be7903867a17f18e16cae8fad8d4d")
+	p2pkAddr, _ := addrdec.AddressEncode(p2pk)
+	t.Logf("p2pkAddr: %s", p2pkAddr)
 
-	addr, err := decoder.PublicKeyToAddress(pub, false)
-	if err != nil {
-		t.Errorf("AddressDecode failed unexpected error: %v\n", err)
-		return
-	}
-	t.Logf("addr: %s", addr)
+	p2sh, _ := hex.DecodeString("1406b6c5e35c62b425c627369edcc615c5089ccc")
+	p2shAddr, _ := addrdec.AddressEncode(p2sh, QTUM_mainnetAddressP2SH)
+	t.Logf("p2shAddr: %s", p2shAddr)
+}
+
+func TestAddressDecoder_AddressDecode(t *testing.T) {
+
+	addrdec := tw.GetAddressDecoderV2()
+	p2pkAddr := "QfvSYZSMdtr4M6ShjPa2DhbdgYHkjegV6R"
+	p2pkHash, _ := addrdec.AddressDecode(p2pkAddr)
+	t.Logf("p2pkHash: %s", hex.EncodeToString(p2pkHash))
+
+	p2shAddr := "M9j3nm5HAQ88bWbGYLk8YbVPsZJvvrLVVj"
+
+	p2shHash, _ := addrdec.AddressDecode(p2shAddr, QTUM_mainnetAddressP2SH)
+	t.Logf("p2shHash: %s", hex.EncodeToString(p2shHash))
 }
 
 func TestHashAddressToBaseAddress(t *testing.T) {

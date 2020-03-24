@@ -43,7 +43,7 @@ func (decoder *ContractDecoder) GetTokenBalanceByAddress(contract openwallet.Sma
 	var tokenBalanceList []*openwallet.TokenBalance
 
 	for i := 0; i < len(address); i++ {
-		balance, _ := decoder.wm.GetQRC20Balance(contract, address[i], decoder.wm.config.isTestNet)
+		balance, _ := decoder.wm.GetQRC20Balance(contract, address[i], decoder.wm.Config.isTestNet)
 		//if err != nil {
 		//	log.Errorf("get address[%v] QRC20 token balance failed, err=%v", address[i], err)
 		//}
@@ -86,7 +86,7 @@ func AddressTo32bytesArg(address string, isTestNet bool) ([]byte, error) {
 
 // GetQRC20Balance 获取qrc20余额
 func (wm *WalletManager) GetQRC20Balance(token openwallet.SmartContract, address string, isTestNet bool) (decimal.Decimal, error) {
-	if wm.config.RPCServerType == RPCServerExplorer {
+	if wm.Config.RPCServerType == RPCServerExplorer {
 		return wm.getAddressTokenBalanceByExplorer(token, address)
 	} else {
 		return wm.GetQRC20UnspentByAddress(token.Address, address, token.Decimals, isTestNet)
@@ -110,7 +110,7 @@ func (wm *WalletManager) GetQRC20UnspentByAddress(contractAddress, address strin
 		combineString,
 	}
 
-	result, err := wm.walletClient.Call("callcontract", request)
+	result, err := wm.WalletClient.Call("callcontract", request)
 	if err != nil {
 		return decimal.New(0, 0), err
 	}
@@ -174,7 +174,7 @@ func (wm *WalletManager) QRC20Transfer(contractAddress string, from string, to s
 		from,
 	}
 
-	result, err := wm.walletClient.Call("sendtocontract", request)
+	result, err := wm.WalletClient.Call("sendtocontract", request)
 	if err != nil {
 		return "", err
 	}

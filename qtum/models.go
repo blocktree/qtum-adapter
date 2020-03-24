@@ -192,7 +192,7 @@ func NewBlock(json *gjson.Result) *Block {
 }
 
 //BlockHeader 区块链头
-func (b *Block) BlockHeader() *openwallet.BlockHeader {
+func (b *Block) BlockHeader(symbol string) *openwallet.BlockHeader {
 
 	obj := openwallet.BlockHeader{}
 	//解析json
@@ -203,7 +203,7 @@ func (b *Block) BlockHeader() *openwallet.BlockHeader {
 	obj.Height = b.Height
 	obj.Version = b.Version
 	obj.Time = b.Time
-	obj.Symbol = Symbol
+	obj.Symbol = symbol
 
 	return &obj
 }
