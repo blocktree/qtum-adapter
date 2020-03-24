@@ -38,9 +38,9 @@ type AddressDecoderV2 struct {
 //AddressDecode 地址解析
 func (dec *AddressDecoderV2) AddressDecode(addr string, opts ...interface{}) ([]byte, error) {
 
-	cfg := addressEncoder.QTUM_mainnetPrivateWIFCompressed
+	cfg := QTUM_mainnetAddressP2PKH
 	if dec.IsTestNet {
-		cfg = addressEncoder.QTUM_testnetPrivateWIFCompressed
+		cfg = QTUM_mainnetAddressP2PKH
 	}
 
 	if len(opts) > 0 {
@@ -57,9 +57,9 @@ func (dec *AddressDecoderV2) AddressDecode(addr string, opts ...interface{}) ([]
 //AddressEncode 地址编码
 func (dec *AddressDecoderV2) AddressEncode(hash []byte, opts ...interface{}) (string, error) {
 
-	cfg := addressEncoder.QTUM_mainnetAddressP2PKH
+	cfg := QTUM_mainnetAddressP2PKH
 	if dec.IsTestNet {
-		cfg = addressEncoder.QTUM_testnetAddressP2PKH
+		cfg = QTUM_testnetAddressP2PKH
 	}
 
 	if len(opts) > 0 {
