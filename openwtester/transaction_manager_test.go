@@ -119,8 +119,8 @@ func TestWalletManager_GetAssetsAccountBalance(t *testing.T) {
 func TestWalletManager_GetAssetsAccountTokenBalance(t *testing.T) {
 	tm := testInitWalletManager()
 	walletID := "WEqcj8FDLvf3uAS44ChEutM6oUbmgN23bf"
-	//accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
-	accountID := "4gc8Ff4tiKFtPj6JzbAZqofyUHpbVHk3CpR21hTovS8T"
+	accountID := "GVK6daCGmqKHfe2zEbpixarAJ9HEqawyAm9jFvmqU59Q"
+	//accountID := "4gc8Ff4tiKFtPj6JzbAZqofyUHpbVHk3CpR21hTovS8T"
 	contract := openwallet.SmartContract{
 		Address:  "0xf2033ede578e17fa6231047265010445bca8cf1c",
 		Symbol:   "QTUM",

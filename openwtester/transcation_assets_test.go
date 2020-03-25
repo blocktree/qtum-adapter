@@ -166,10 +166,10 @@ func TestTransfer_QRC20(t *testing.T) {
 
 	addrs := []string{
 		"QRedeaK8D7qPQb6WvNnX1MV4enKKwFqmHk",
-		//"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
-		//"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
-		//"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
-		//"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
+		"QRjs63s2Z6ZEy9rspv6M78W6TFyBfBgtjQ",
+		"Qh9SFogNRy4hE5EZHWrxNQkZjh7oYvAdLs",
+		"QemtqpFphaQM9jgzTQTx9ReMiqZDVk4Yoa",
+		"QbRkUK3GwrYn2myoAsS5G7RMQAfAr1uHNF",
 	}
 
 	tm := testInitWalletManager()
@@ -208,6 +208,8 @@ func TestTransfer_QRC20(t *testing.T) {
 		if err != nil {
 			return
 		}
+
+		//time.Sleep(30 * time.Second)
 	}
 }
 
