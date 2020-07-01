@@ -114,7 +114,7 @@ func (decoder *TransactionDecoder) CreateSimpleRawTransaction(wrapper openwallet
 	sort.Sort(UnspentSort{unspents, func(a, b *Unspent) int {
 		a_amount, _ := decimal.NewFromString(a.Amount)
 		b_amount, _ := decimal.NewFromString(b.Amount)
-		if a_amount.GreaterThan(b_amount) {
+		if a_amount.LessThan(b_amount) {
 			return 1
 		} else {
 			return -1
