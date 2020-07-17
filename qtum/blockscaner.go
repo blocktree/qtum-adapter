@@ -16,6 +16,7 @@
 package qtum
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -413,6 +414,7 @@ func (bs *BTCBlockScanner) BatchExtractTransaction(blockHeight uint64, blockHash
 	if len(txs) == 0 {
 		return errors.New("BatchExtractTransaction block is nil.")
 	}
+
 
 	//生产通道
 	producer := make(chan ExtractResult)
@@ -964,6 +966,8 @@ func (bs *BTCBlockScanner) newExtractDataNotify(height uint64, extractData map[s
 
 	for o, _ := range bs.Observers {
 		for key, data := range extractData {
+			dataJson, _ := json.Marshal(data)
+			bs.wm.Log.Infof("TxExtractData: %s", string(dataJson))
 			err := o.BlockExtractDataNotify(key, data)
 			if err != nil {
 				bs.wm.Log.Error("BlockExtractDataNotify unexpected error:", err)
