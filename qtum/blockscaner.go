@@ -16,7 +16,6 @@
 package qtum
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -966,8 +965,8 @@ func (bs *BTCBlockScanner) newExtractDataNotify(height uint64, extractData map[s
 
 	for o, _ := range bs.Observers {
 		for key, data := range extractData {
-			dataJson, _ := json.Marshal(data)
-			bs.wm.Log.Infof("TxExtractData: %s", string(dataJson))
+			//dataJson, _ := json.Marshal(data)
+			//bs.wm.Log.Infof("TxExtractData: %s", string(dataJson))
 			err := o.BlockExtractDataNotify(key, data)
 			if err != nil {
 				bs.wm.Log.Error("BlockExtractDataNotify unexpected error:", err)
